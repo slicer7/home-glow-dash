@@ -15,3 +15,14 @@ export type DeviceEvent = {
   payload: Record<string, unknown> | null;
   created_at: string;
 };
+
+export type RfIcon = "lightbulb" | "fan" | "power" | "plug" | "sun" | "snowflake";
+
+export type RfSignal = {
+  slot: number;
+  label: string;
+  icon: RfIcon;
+  learned: boolean;
+  created_at: string;
+};
+
