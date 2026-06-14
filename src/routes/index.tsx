@@ -6,6 +6,7 @@ import { Header } from "@/components/dashboard/Header";
 import { ButtonStateCard } from "@/components/dashboard/ButtonStateCard";
 import { EventFeed } from "@/components/dashboard/EventFeed";
 import { ComingSoonCard } from "@/components/dashboard/ComingSoonCard";
+import { RfControlGrid } from "@/components/dashboard/RfControlGrid";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -76,6 +77,7 @@ function Dashboard() {
       <Header connected={connected} />
       <main className="mx-auto grid max-w-7xl gap-5 p-5 lg:grid-cols-3 lg:p-8">
         <section className="space-y-5 lg:col-span-2">
+          <RfControlGrid />
           <ButtonStateCard lastPressedAt={lastPressedAt} />
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             <ComingSoonCard
