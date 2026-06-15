@@ -62,8 +62,8 @@ function Room() {
    forms (torus for the curled body, ellipsoids for head/snout) rather than
    a cluster of spheres, so it reads as a real dog silhouette. */
 function SleepingDog() {
-  const fur = "#2a2a2a";
-  const muzzle = "#3a3a3a";
+  const fur = "#141414"; // black lab
+  const muzzle = "#1f1f1f";
   const whiteTip = "#e8eaed";
   const nose = "#0a0a0a";
   const pink = "#5b3a3a";
