@@ -7,7 +7,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Plus, Radio, RefreshCw, Trash2 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { MoreHorizontal, Pencil, Plus, Radio, RefreshCw, Trash2 } from "lucide-react";
 import { iconFor } from "./rfIcons";
 import { toast } from "sonner";
 import { AddControlDialog } from "./AddControlDialog";
@@ -19,6 +28,8 @@ export function RfControlGrid() {
   const [pulsedSlot, setPulsedSlot] = useState<number | null>(null);
   const [addOpen, setAddOpen] = useState(false);
   const [learn, setLearn] = useState<{ slot: number; label: string } | null>(null);
+  const [renaming, setRenaming] = useState<RfSignal | null>(null);
+  const [renameValue, setRenameValue] = useState("");
 
   const refresh = async () => {
     const { data, error } = await supabase
@@ -69,6 +80,21 @@ export function RfControlGrid() {
       return;
     }
     toast.success("Deleted", { description: sig.label });
+    refresh();
+  };
+
+  const saveRename = async () => {
+    if (!renaming || !renameValue.trim()) return;
+    const { error } = await supabase
+      .from("rf_signals")
+      .update({ label: renameValue.trim() })
+      .eq("slot", renaming.slot);
+    if (error) {
+      toast.error("Rename failed", { description: error.message });
+      return;
+    }
+    toast.success("Renamed", { description: renameValue.trim() });
+    setRenaming(null);
     refresh();
   };
 
@@ -182,6 +208,15 @@ export function RfControlGrid() {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem
+                      onClick={() => {
+                        setRenaming(sig);
+                        setRenameValue(sig.label);
+                      }}
+                    >
+                      <Pencil className="mr-2 h-4 w-4" />
+                      Rename
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
                       onClick={() => setLearn({ slot: sig.slot, label: sig.label })}
                     >
                       <RefreshCw className="mr-2 h-4 w-4" />
@@ -216,6 +251,32 @@ export function RfControlGrid() {
         onOpenChange={(o) => !o && setLearn(null)}
         onLearned={refresh}
       />
+
+      <Dialog open={renaming !== null} onOpenChange={(o) => !o && setRenaming(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Rename control</DialogTitle>
+            <DialogDescription>Slot {renaming?.slot}</DialogDescription>
+          </DialogHeader>
+          <Input
+            value={renameValue}
+            onChange={(e) => setRenameValue(e.target.value)}
+            placeholder="Control name"
+            autoFocus
+            onKeyDown={(e) => {
+              if (e.key === "Enter") saveRename();
+            }}
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRenaming(null)}>
+              Cancel
+            </Button>
+            <Button onClick={saveRename} disabled={!renameValue.trim()}>
+              Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 }
