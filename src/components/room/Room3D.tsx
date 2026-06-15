@@ -154,6 +154,7 @@ export function Room3D({
 
       <Room />
       <Fan />
+      <SleepingDog />
 
       {/* Control buttons arranged in a ring around the fan */}
       {signals.map((sig, idx) => {
