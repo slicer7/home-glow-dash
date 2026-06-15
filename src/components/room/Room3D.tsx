@@ -58,34 +58,40 @@ function Room() {
   );
 }
 
-/* A small black lab mix curled up sleeping on the floor. */
+/* A small black lab mix curled up sleeping on a mat in the center of the floor. */
 function SleepingDog() {
-  const black = "#1a1a1a";
-  const charcoal = "#2d2d2d";
+  const fur = "#2a2a2a";
+  const charcoal = "#3d3d3d";
   const whiteTip = "#e2e8f0";
-  const nose = "#0f0f0f";
+  const nose = "#111111";
 
   return (
     <group position={[0, -1.72, 0]} rotation={[0, Math.PI / 6, 0]}>
+      {/* Round dog bed/mat for contrast */}
+      <mesh position={[0, -0.08, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <circleGeometry args={[0.42, 32]} />
+        <meshStandardMaterial color="#334155" roughness={1} />
+      </mesh>
+
       {/* Curled torso — three overlapping spheres form the C-shape */}
       <mesh position={[0, 0, 0.18]}>
         <sphereGeometry args={[0.18, 16, 16]} />
-        <meshStandardMaterial color={black} roughness={0.9} />
+        <meshStandardMaterial color={fur} roughness={0.9} />
       </mesh>
       <mesh position={[0.14, 0, 0]}>
         <sphereGeometry args={[0.16, 16, 16]} />
-        <meshStandardMaterial color={black} roughness={0.9} />
+        <meshStandardMaterial color={fur} roughness={0.9} />
       </mesh>
       <mesh position={[0, 0, -0.18]}>
         <sphereGeometry args={[0.17, 16, 16]} />
-        <meshStandardMaterial color={black} roughness={0.9} />
+        <meshStandardMaterial color={fur} roughness={0.9} />
       </mesh>
 
       {/* Head resting near the tail */}
       <group position={[-0.12, 0.06, -0.22]}>
         <mesh>
           <sphereGeometry args={[0.11, 16, 16]} />
-          <meshStandardMaterial color={black} roughness={0.9} />
+          <meshStandardMaterial color={fur} roughness={0.9} />
         </mesh>
         {/* Snout */}
         <mesh position={[0.04, -0.02, 0.08]}>
@@ -100,20 +106,20 @@ function SleepingDog() {
         {/* Ear (floppy) */}
         <mesh position={[-0.06, 0.02, -0.02]} rotation={[0.2, 0, -0.3]}>
           <boxGeometry args={[0.06, 0.1, 0.02]} />
-          <meshStandardMaterial color={black} roughness={0.95} />
+          <meshStandardMaterial color={fur} roughness={0.95} />
         </mesh>
       </group>
 
       {/* Tail curled around */}
       <mesh position={[0.16, 0.02, 0.14]} rotation={[0, 0, -0.4]}>
         <capsuleGeometry args={[0.035, 0.14, 8, 8]} />
-        <meshStandardMaterial color={black} roughness={0.9} />
+        <meshStandardMaterial color={fur} roughness={0.9} />
       </mesh>
 
       {/* Front paws tucked in — white tips visible */}
       <mesh position={[-0.06, -0.1, 0.1]} rotation={[0.3, 0, 0]}>
         <capsuleGeometry args={[0.03, 0.08, 8, 8]} />
-        <meshStandardMaterial color={black} roughness={0.9} />
+        <meshStandardMaterial color={fur} roughness={0.9} />
       </mesh>
       {/* Front paw white tip */}
       <mesh position={[-0.06, -0.1, 0.15]}>
@@ -124,7 +130,7 @@ function SleepingDog() {
       {/* Back paws tucked under — white tips */}
       <mesh position={[0.18, -0.1, -0.06]} rotation={[0.2, 0.5, 0]}>
         <capsuleGeometry args={[0.032, 0.09, 8, 8]} />
-        <meshStandardMaterial color={black} roughness={0.9} />
+        <meshStandardMaterial color={fur} roughness={0.9} />
       </mesh>
       {/* Back paw white tip */}
       <mesh position={[0.22, -0.1, -0.08]}>
