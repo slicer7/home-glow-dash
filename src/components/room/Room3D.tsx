@@ -201,30 +201,28 @@ function DeskArea() {
   const topY = 2.5;
   return (
     <group>
-      {/* main desk: along east wall, Z from −6 to 0 */}
-      <DeskSlab x={HX - 0.95} z={-3} w={1.7} d={6} topY={topY} />
-      {/* return: short run under the window (north wall), X from +2 to +4.3 */}
-      <DeskSlab x={3.1} z={-HZ + 0.9} w={2.4} d={1.7} topY={topY} />
+      {/* single desk run along the east wall (decluttered — no L-return) */}
+      <DeskSlab x={HX - 0.95} z={-2.5} w={1.7} d={6} topY={topY} />
 
-      {/* PC tower under the desk */}
-      <mesh position={[HX - 1.0, 0.9, -1.2]}>
+      {/* PC tower under the desk, left (north) end */}
+      <mesh position={[HX - 1.0, 0.9, -5.0]}>
         <boxGeometry args={[0.8, 1.7, 1.6]} />
         <meshStandardMaterial color={C.black} roughness={0.6} />
         <Edges color="#6d28d9" />
       </mesh>
 
-      {/* Main ultrawide monitor (faces west) near the north end */}
-      <Monitor x={HX - 0.4} y={topY + 0.85} z={-4.4} w={3.0} h={1.1} rotY={-Math.PI / 2} />
-      {/* Vertical monitor to its left (further north), portrait */}
-      <Monitor x={HX - 0.4} y={topY + 0.95} z={-5.6} w={1.0} h={1.7} rotY={-Math.PI / 2} />
+      {/* Main ultrawide monitor (faces west), centered on the desk under the TV */}
+      <Monitor x={HX - 0.4} y={topY + 0.85} z={-3.2} w={3.0} h={1.1} rotY={-Math.PI / 2} />
+      {/* Vertical monitor to its left, portrait */}
+      <Monitor x={HX - 0.4} y={topY + 0.95} z={-4.5} w={1.0} h={1.7} rotY={-Math.PI / 2} />
       {/* LED lightbar above the main monitor */}
-      <mesh position={[HX - 0.6, topY + 1.55, -4.4]} rotation={[0, -Math.PI / 2, 0]}>
+      <mesh position={[HX - 0.6, topY + 1.55, -3.2]} rotation={[0, -Math.PI / 2, 0]}>
         <boxGeometry args={[2.6, 0.06, 0.12]} />
         <meshStandardMaterial color="#222" emissive="#fff2cc" emissiveIntensity={0.6} />
       </mesh>
 
       {/* Office chair */}
-      <group position={[HX - 2.6, 0, -4.6]}>
+      <group position={[HX - 2.6, 0, -3.2]}>
         <mesh position={[0, 1.1, 0]}>
           <boxGeometry args={[1.4, 0.18, 1.4]} />
           <meshStandardMaterial color={C.black} roughness={0.7} />
@@ -347,10 +345,10 @@ function TvWall() {
   );
 }
 
-/* ── AC tower (NE corner, next to the desk). 1×1×4 ft. ────────────────────── */
+/* ── AC tower — floor, south end of the desk wall (right side in view). ────── */
 function AcUnit() {
   return (
-    <group position={[HX - 1.3, 0, -HZ + 1.0]}>
+    <group position={[HX - 0.7, 0, 2.4]}>
       <mesh position={[0, 2, 0]}>
         <boxGeometry args={[1.0, 4.0, 1.0]} />
         <meshStandardMaterial color={C.acWhite} roughness={0.4} />
@@ -369,7 +367,8 @@ function AcUnit() {
 function BayWindow() {
   const z = -HZ;
   return (
-    <group>
+    /* shifted east toward the NE corner */
+    <group position={[1.3, 0, 0]}>
       {/* recessed bay box jutting 2 ft into the room */}
       <mesh position={[3.0, 4.5, z + 1.0]}>
         <boxGeometry args={[4.0, 3.0, 2.0]} />
@@ -396,22 +395,23 @@ function BayWindow() {
   );
 }
 
-/* ── Door (SW) + closet (SE) on the South wall. ───────────────────────────── */
+/* ── Door (West wall, south end, by the bed) + closet (South wall). ───────── */
 function SouthWall() {
   const z = HZ - 0.06;
+  const wx = -HX + 0.06;
   return (
     <group>
-      {/* door, west side */}
-      <mesh position={[-4.0, 3.35, z]}>
+      {/* door — on the WEST wall, south end (next to the bed stairs) */}
+      <mesh position={[wx, 3.35, 3.8]} rotation={[0, Math.PI / 2, 0]}>
         <boxGeometry args={[2.5, 6.7, 0.1]} />
         <meshStandardMaterial color={C.woodDoor} roughness={0.6} />
         <Edges color="#3a2c1c" />
       </mesh>
-      <mesh position={[-3.0, 3.2, z - 0.08]}>
+      <mesh position={[wx + 0.1, 3.2, 4.7]}>
         <sphereGeometry args={[0.08, 12, 12]} />
         <meshStandardMaterial color="#b8973f" metalness={0.7} roughness={0.3} />
       </mesh>
-      {/* closet bifold doors, east side */}
+      {/* closet bifold doors — South wall, east side */}
       <mesh position={[1.0, 3.4, z]}>
         <boxGeometry args={[4.0, 6.8, 0.08]} />
         <meshStandardMaterial color="#d8cdbb" roughness={0.7} />
@@ -424,10 +424,12 @@ function SouthWall() {
 /* ── Audio: subwoofer on the floor + four small surround speakers. ─────────── */
 function AudioBits() {
   const surround: [number, number, number][] = [
-    [HX - 0.4, 5.6, -HZ + 0.4],
-    [-HX + 0.4, 5.6, -HZ + 0.4],
-    [HX - 0.4, 5.6, HZ - 0.4],
-    [-HX + 0.4, 5.6, HZ - 0.4],
+    // rear surrounds — sitting on top of the couch back
+    [-5.1, 2.4, -4.8],
+    [-5.1, 2.4, 0.5],
+    // front surrounds — flanking the TV on the desk wall
+    [HX - 0.4, 4.6, -5.6],
+    [HX - 0.4, 4.6, -2.2],
   ];
   return (
     <group>
@@ -442,34 +444,6 @@ function AudioBits() {
           <meshStandardMaterial color="#1c1c1c" />
         </mesh>
       ))}
-    </group>
-  );
-}
-
-/* ── A small black lab curled up sleeping (kept as an easter egg). ─────────── */
-function SleepingDog() {
-  const fur = "#141414";
-  const whiteTip = "#e8eaed";
-  return (
-    <group position={[1.2, 0.0, 3.4]} scale={2.6}>
-      <mesh position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <circleGeometry args={[0.55, 40]} />
-        <meshStandardMaterial color="#39414c" roughness={1} />
-      </mesh>
-      <group position={[0, 0.18, 0]} scale={[1, 0.55, 1]}>
-        <mesh rotation={[0, -0.3, 0]}>
-          <torusGeometry args={[0.26, 0.13, 16, 40, Math.PI * 1.85]} />
-          <meshStandardMaterial color={fur} roughness={0.95} />
-        </mesh>
-      </group>
-      <mesh position={[-0.34, 0.16, 0.18]} scale={[1.2, 0.9, 0.95]}>
-        <sphereGeometry args={[0.12, 18, 18]} />
-        <meshStandardMaterial color={fur} roughness={0.95} />
-      </mesh>
-      <mesh position={[-0.5, 0.13, 0.18]} scale={[1.1, 0.8, 0.9]}>
-        <sphereGeometry args={[0.055, 14, 14]} />
-        <meshStandardMaterial color={whiteTip} roughness={0.85} />
-      </mesh>
     </group>
   );
 }
@@ -637,7 +611,6 @@ export function Room3D({
         <SouthWall />
         <AudioBits />
         <CeilingFan />
-        <SleepingDog />
       </group>
 
       {controls.map((c) => (

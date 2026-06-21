@@ -34,8 +34,8 @@ function rfDefault(i: number): [number, number, number] {
 }
 function irDefault(device: string, i: number): [number, number, number] {
   if (device === "tv") return [4.9, 5.2 - i * 0.8, -3.9]; // by the TV
-  if (device === "speaker") return [4.9, 3.0 - i * 0.8, -3.0]; // by the soundbar
-  if (device === "ac") return [4.6, 3.3 - i * 0.8, -5.0]; // by the AC tower
+  if (device === "speaker") return [4.9, 3.2 - i * 0.8, -3.9]; // by the soundbar
+  if (device === "ac") return [4.9, 3.3 - i * 0.8, 2.4]; // by the AC tower (south end)
   return [0, 4, 0];
 }
 
