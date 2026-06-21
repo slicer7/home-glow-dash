@@ -58,117 +58,6 @@ function Room() {
   );
 }
 
-/* A small lab mix curled up sleeping on a mat — built from continuous curved
-   forms (torus for the curled body, ellipsoids for head/snout) rather than
-   a cluster of spheres, so it reads as a real dog silhouette. */
-function SleepingDog() {
-  const fur = "#141414"; // black lab
-  const muzzle = "#1f1f1f";
-  const whiteTip = "#e8eaed";
-  const nose = "#0a0a0a";
-  const pink = "#5b3a3a";
-
-  return (
-    <group position={[0, -1.72, 0]} rotation={[-Math.PI / 2, 0, 0.4]}>
-      {/* Dog bed / mat (rotate back to floor plane) */}
-      <mesh position={[0, 0, -0.08]} rotation={[0, 0, 0]}>
-        <circleGeometry args={[0.55, 48]} />
-        <meshStandardMaterial color="#334155" roughness={1} />
-      </mesh>
-
-      {/* === BODY: a thick partial torus = the curled C-shape spine === */}
-      {/* Torus lies flat (in the group's local XY plane = floor). Arc ~340deg
-          leaves a gap where the head tucks in. Slightly squashed in Z so it
-          hugs the floor instead of looking like a donut. */}
-      <group scale={[1, 1, 0.55]} position={[0, 0, 0.11]}>
-        <mesh rotation={[0, 0, -0.3]}>
-          <torusGeometry args={[0.26, 0.13, 20, 48, Math.PI * 1.85]} />
-          <meshStandardMaterial color={fur} roughness={0.95} />
-        </mesh>
-      </group>
-
-      {/* Haunch / rear hip — bulges over the back leg */}
-      <mesh position={[0.28, 0.08, 0.1]} scale={[1.1, 0.95, 0.75]}>
-        <sphereGeometry args={[0.16, 20, 20]} />
-        <meshStandardMaterial color={fur} roughness={0.95} />
-      </mesh>
-
-      {/* Shoulder mass */}
-      <mesh position={[-0.18, -0.22, 0.09]} scale={[1, 1.05, 0.8]}>
-        <sphereGeometry args={[0.14, 20, 20]} />
-        <meshStandardMaterial color={fur} roughness={0.95} />
-      </mesh>
-
-      {/* === HEAD: elongated ellipsoid resting on the floor === */}
-      <group position={[-0.34, -0.18, 0.06]} rotation={[0, 0, 0.25]}>
-        {/* Skull */}
-        <mesh scale={[1.2, 0.95, 0.8]}>
-          <sphereGeometry args={[0.11, 24, 24]} />
-          <meshStandardMaterial color={fur} roughness={0.95} />
-        </mesh>
-        {/* Muzzle — tapered, points forward (−X) */}
-        <mesh position={[-0.13, -0.01, -0.01]} rotation={[0, 0, Math.PI / 2]} scale={[1, 1, 0.85]}>
-          <coneGeometry args={[0.07, 0.16, 18]} />
-          <meshStandardMaterial color={muzzle} roughness={0.95} />
-        </mesh>
-        {/* Nose */}
-        <mesh position={[-0.21, -0.01, 0]}>
-          <sphereGeometry args={[0.024, 12, 12]} />
-          <meshStandardMaterial color={nose} roughness={0.4} />
-        </mesh>
-        {/* Floppy ear — flat plane draped over the head */}
-        <mesh position={[0.04, 0.05, 0.03]} rotation={[0.4, 0.3, -0.2]}>
-          <boxGeometry args={[0.11, 0.13, 0.012]} />
-          <meshStandardMaterial color={fur} roughness={0.95} />
-        </mesh>
-        {/* Tongue tip peeking out */}
-        <mesh position={[-0.19, -0.04, 0.005]} rotation={[0, 0, 0.2]}>
-          <boxGeometry args={[0.03, 0.018, 0.008]} />
-          <meshStandardMaterial color={pink} roughness={0.7} />
-        </mesh>
-      </group>
-
-      {/* === LEGS / PAWS — capsules tucked along the body === */}
-      {/* Front leg folded under chin */}
-      <mesh position={[-0.22, -0.08, 0.05]} rotation={[0, 0, 1.4]}>
-        <capsuleGeometry args={[0.05, 0.18, 8, 16]} />
-        <meshStandardMaterial color={fur} roughness={0.95} />
-      </mesh>
-      {/* Front paw — white tip */}
-      <mesh position={[-0.31, -0.06, 0.045]} scale={[1.1, 0.9, 0.8]}>
-        <sphereGeometry args={[0.055, 16, 16]} />
-        <meshStandardMaterial color={whiteTip} roughness={0.85} />
-      </mesh>
-
-      {/* Second front leg crossing over */}
-      <mesh position={[-0.18, -0.02, 0.04]} rotation={[0, 0, 1.1]}>
-        <capsuleGeometry args={[0.045, 0.16, 8, 16]} />
-        <meshStandardMaterial color={fur} roughness={0.95} />
-      </mesh>
-      <mesh position={[-0.27, 0.02, 0.04]} scale={[1, 0.85, 0.8]}>
-        <sphereGeometry args={[0.05, 16, 16]} />
-        <meshStandardMaterial color={whiteTip} roughness={0.85} />
-      </mesh>
-
-      {/* Back leg tucked along belly */}
-      <mesh position={[0.18, -0.1, 0.05]} rotation={[0, 0, 0.5]}>
-        <capsuleGeometry args={[0.055, 0.2, 8, 16]} />
-        <meshStandardMaterial color={fur} roughness={0.95} />
-      </mesh>
-      {/* Back paw — white tip */}
-      <mesh position={[0.06, -0.18, 0.045]} scale={[1.1, 0.9, 0.8]}>
-        <sphereGeometry args={[0.058, 16, 16]} />
-        <meshStandardMaterial color={whiteTip} roughness={0.85} />
-      </mesh>
-
-      {/* Tail curled around the haunch */}
-      <mesh position={[0.32, -0.05, 0.1]} rotation={[0, 0, -1.1]}>
-        <capsuleGeometry args={[0.028, 0.18, 8, 12]} />
-        <meshStandardMaterial color={fur} roughness={0.95} />
-      </mesh>
-    </group>
-  );
-}
 
 export function Room3D({
   signals,
@@ -189,7 +78,6 @@ export function Room3D({
 
       <Room />
       <Fan />
-      <SleepingDog />
 
       {/* Control buttons arranged in a ring around the fan */}
       {signals.map((sig, idx) => {
