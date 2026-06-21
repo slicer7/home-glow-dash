@@ -462,12 +462,17 @@ export type RoomControl = {
 };
 
 const NO_RAYCAST = () => null;
+// Stable reference to the real mesh raycast. Passing `undefined` to the raycast
+// prop doesn't reliably restore the default in r3f (it left every marker
+// non-raycastable after one drag), so we toggle between this and NO_RAYCAST.
+const DEFAULT_RAYCAST = THREE.Mesh.prototype.raycast;
 
 function Marker({
   control,
   pos,
   editing,
   dragging,
+  selected,
   onSend,
   onEdit,
   onStartDrag,
@@ -476,6 +481,7 @@ function Marker({
   pos: [number, number, number];
   editing: boolean;
   dragging: boolean;
+  selected: boolean;
   onSend: (c: RoomControl) => void;
   onEdit?: (c: RoomControl) => void;
   onStartDrag: (c: RoomControl) => void;
@@ -486,7 +492,7 @@ function Marker({
       {/* invisible hit sphere — ignored by the raycaster while another marker
           is being dragged so the cursor sees the furniture beneath it. */}
       <mesh
-        raycast={dragging ? NO_RAYCAST : undefined}
+        raycast={dragging ? NO_RAYCAST : DEFAULT_RAYCAST}
         onPointerDown={(e: ThreeEvent<PointerEvent>) => {
           if (!editing) return;
           e.stopPropagation();
@@ -508,9 +514,11 @@ function Marker({
         <div className="flex select-none flex-col items-center gap-1">
           <div
             className={`flex h-12 w-12 items-center justify-center rounded-xl border shadow-lg backdrop-blur ${
-              control.learned
-                ? "border-primary/60 bg-card/90 text-foreground"
-                : "border-destructive/50 bg-card/80 text-muted-foreground"
+              selected
+                ? "border-amber-400 bg-card text-foreground ring-2 ring-amber-400/70"
+                : control.learned
+                  ? "border-primary/60 bg-card/90 text-foreground"
+                  : "border-destructive/50 bg-card/80 text-muted-foreground"
             }`}
           >
             <Icon className="h-6 w-6" />
@@ -554,18 +562,66 @@ export function Room3D({
   onMove: (c: RoomControl, pos: [number, number, number]) => void;
 }) {
   const [draggingKey, setDraggingKey] = useState<string | null>(null);
+  const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [override, setOverride] = useState<Record<string, [number, number, number]>>({});
 
-  // Refs so the surface-move handler and window pointerup see live values.
+  // Refs so the surface-move / pointerup / keydown handlers see live values.
   const draggingRef = useRef<string | null>(null);
+  const selectedRef = useRef<string | null>(null);
   const overrideRef = useRef(override);
+  const onMoveRef = useRef(onMove);
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   draggingRef.current = draggingKey;
+  selectedRef.current = selectedKey;
   overrideRef.current = override;
+  onMoveRef.current = onMove;
 
   const controlByKey = useRef<Record<string, RoomControl>>({});
   controlByKey.current = Object.fromEntries(
     controls.map((c) => [c.key, c] as [string, RoomControl]),
   );
+
+  // Keyboard nudging of the selected button (edit mode):
+  //   arrows = N/E/S/W (world Z/X), spacebar = up, shift = down.
+  useEffect(() => {
+    if (!editing) {
+      setSelectedKey(null);
+      return;
+    }
+    const STEP = 0.25;
+    const onKey = (e: KeyboardEvent) => {
+      const key = selectedRef.current;
+      if (!key) return;
+      // Don't hijack typing in dialogs (e.g. the rename input).
+      const t = e.target as HTMLElement | null;
+      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable))
+        return;
+      let dx = 0,
+        dy = 0,
+        dz = 0;
+      switch (e.key) {
+        case "ArrowUp": dz = -STEP; break; // north
+        case "ArrowRight": dx = STEP; break; // east
+        case "ArrowDown": dz = STEP; break; // south
+        case "ArrowLeft": dx = -STEP; break; // west
+        case " ": dy = STEP; break; // spacebar = up
+        case "Shift": dy = -STEP; break; // shift = down
+        default: return;
+      }
+      e.preventDefault();
+      const cur = overrideRef.current[key] ?? controlByKey.current[key]?.pos;
+      if (!cur) return;
+      const next: [number, number, number] = [cur[0] + dx, cur[1] + dy, cur[2] + dz];
+      setOverride((o) => ({ ...o, [key]: next }));
+      if (saveTimer.current) clearTimeout(saveTimer.current);
+      saveTimer.current = setTimeout(() => {
+        const c = controlByKey.current[key];
+        if (c) onMoveRef.current(c, next);
+      }, 350);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [editing]);
 
   // Commit on pointer-up anywhere (even off a mesh).
   useEffect(() => {
@@ -620,9 +676,13 @@ export function Room3D({
           pos={override[c.key] ?? c.pos}
           editing={editing}
           dragging={draggingKey !== null}
+          selected={selectedKey === c.key}
           onSend={onSend}
           onEdit={c.kind === "rf" ? onEdit : undefined}
-          onStartDrag={(ctrl) => setDraggingKey(ctrl.key)}
+          onStartDrag={(ctrl) => {
+            setDraggingKey(ctrl.key);
+            setSelectedKey(ctrl.key);
+          }}
         />
       ))}
 
