@@ -24,6 +24,9 @@ export type RfSignal = {
   icon: RfIcon;
   learned: boolean;
   created_at: string;
+  pos_x: number | null;
+  pos_y: number | null;
+  pos_z: number | null;
 };
 
 /* ── IR (TV / speaker / AC) — learned by the P4, transmitted by the clock ── */
@@ -54,6 +57,9 @@ export type IrSignal = {
   icon: IrIcon;
   code: number[];
   created_at: string;
+  pos_x: number | null;
+  pos_y: number | null;
+  pos_z: number | null;
 };
 
 /* ── Alarms — shared by the clock and the website ── */

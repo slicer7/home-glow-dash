@@ -1,5 +1,11 @@
-import { useEffect, useState, lazy, Suspense } from "react";
-import { supabase, type RfSignal, type RfIcon } from "@/lib/supabase";
+import { useEffect, useMemo, useState, lazy, Suspense } from "react";
+import {
+  supabase,
+  type RfSignal,
+  type RfIcon,
+  type IrSignal,
+} from "@/lib/supabase";
+import type { RoomControl } from "./Room3D";
 
 /* Lazy + client-only: three.js / WebGL must not run during SSR. */
 const Room3D = lazy(() =>
@@ -18,12 +24,31 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Plus, RefreshCw, Trash2 } from "lucide-react";
+import { Plus, RefreshCw, Trash2, Move, Check } from "lucide-react";
 import { toast } from "sonner";
 
+/* Default marker positions (feet, room-centered) when a control hasn't been
+ * placed yet — see Room3D for the coordinate frame. */
+function rfDefault(i: number): [number, number, number] {
+  return [-1.2 + i * 1.1, 6.6, 0]; // near the ceiling fan
+}
+function irDefault(device: string, i: number): [number, number, number] {
+  if (device === "tv") return [4.9, 5.2 - i * 0.8, -3.9]; // by the TV
+  if (device === "speaker") return [4.9, 3.0 - i * 0.8, -3.0]; // by the soundbar
+  if (device === "ac") return [4.6, 3.3 - i * 0.8, -5.0]; // by the AC tower
+  return [0, 4, 0];
+}
+
+function hasPos(s: { pos_x: number | null; pos_y: number | null; pos_z: number | null }) {
+  return s.pos_x !== null && s.pos_y !== null && s.pos_z !== null;
+}
+
 export function RoomView() {
-  const [signals, setSignals] = useState<RfSignal[]>([]);
+  const [rf, setRf] = useState<RfSignal[]>([]);
+  const [ir, setIr] = useState<IrSignal[]>([]);
   const [mounted, setMounted] = useState(false); /* gate WebGL to the client */
+  const [editing, setEditing] = useState(false);
+
   const [addOpen, setAddOpen] = useState(false);
   const [learn, setLearn] = useState<{ slot: number; label: string } | null>(null);
 
@@ -34,43 +59,98 @@ export function RoomView() {
   useEffect(() => setMounted(true), []);
 
   const refresh = async () => {
-    const { data, error } = await supabase
-      .from("rf_signals")
-      .select("*")
-      .order("slot", { ascending: true });
-    if (error) {
-      toast.error("Couldn’t load controls", { description: error.message });
-      return;
-    }
-    setSignals((data ?? []) as RfSignal[]);
+    const [rfRes, irRes] = await Promise.all([
+      supabase.from("rf_signals").select("*").order("slot", { ascending: true }),
+      supabase.from("ir_signals").select("*").order("created_at", { ascending: true }),
+    ]);
+    if (rfRes.error) toast.error("Couldn’t load RF controls", { description: rfRes.error.message });
+    else setRf((rfRes.data ?? []) as RfSignal[]);
+    if (irRes.error) toast.error("Couldn’t load IR controls", { description: irRes.error.message });
+    else setIr((irRes.data ?? []) as IrSignal[]);
   };
 
   useEffect(() => {
     refresh();
     const ch = supabase
-      .channel("rf_room")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "rf_signals" },
-        () => refresh(),
-      )
+      .channel("room_controls")
+      .on("postgres_changes", { event: "*", schema: "public", table: "rf_signals" }, () => refresh())
+      .on("postgres_changes", { event: "*", schema: "public", table: "ir_signals" }, () => refresh())
       .subscribe();
     return () => {
       supabase.removeChannel(ch);
     };
   }, []);
 
-  const send = async (sig: RfSignal) => {
-    toast.success("Sent ✓", { description: sig.label });
-    const { error } = await supabase.from("commands").insert({
-      target_device: "p4_hub",
-      command: "rf_send",
-      params: { slot: sig.slot },
+  /* Build the unified, positioned control list for the 3D view. */
+  const controls = useMemo<RoomControl[]>(() => {
+    const rfControls: RoomControl[] = rf.map((s, i) => ({
+      key: `rf:${s.slot}`,
+      kind: "rf",
+      label: s.label,
+      iconKey: s.icon,
+      learned: s.learned,
+      pos: hasPos(s) ? [s.pos_x!, s.pos_y!, s.pos_z!] : rfDefault(i),
+    }));
+    const perDevice: Record<string, number> = {};
+    const irControls: RoomControl[] = ir.map((s) => {
+      const i = perDevice[s.device] ?? 0;
+      perDevice[s.device] = i + 1;
+      return {
+        key: `ir:${s.id}`,
+        kind: "ir",
+        label: s.label,
+        iconKey: s.icon,
+        learned: (s.code?.length ?? 0) > 0,
+        pos: hasPos(s) ? [s.pos_x!, s.pos_y!, s.pos_z!] : irDefault(s.device, i),
+      };
     });
-    if (error) toast.error("Send failed", { description: error.message });
+    return [...rfControls, ...irControls];
+  }, [rf, ir]);
+
+  const send = async (c: RoomControl) => {
+    if (c.kind === "rf") {
+      const slot = Number(c.key.slice(3));
+      toast.success("Sent ✓", { description: c.label });
+      const { error } = await supabase.from("commands").insert({
+        target_device: "p4_hub",
+        command: "rf_send",
+        params: { slot },
+      });
+      if (error) toast.error("Send failed", { description: error.message });
+    } else {
+      const id = c.key.slice(3);
+      toast.success("Sent ✓", { description: c.label });
+      const { error } = await supabase.from("commands").insert({
+        target_device: "clock",
+        command: "ir_send",
+        params: { signal_id: id },
+      });
+      if (error) toast.error("Send failed", { description: error.message });
+    }
   };
 
-  const openEdit = (sig: RfSignal) => {
+  const move = async (c: RoomControl, pos: [number, number, number]) => {
+    const [x, y, z] = pos.map((n) => Math.round(n * 1000) / 1000);
+    if (c.kind === "rf") {
+      const slot = Number(c.key.slice(3));
+      const { error } = await supabase
+        .from("rf_signals")
+        .update({ pos_x: x, pos_y: y, pos_z: z })
+        .eq("slot", slot);
+      if (error) toast.error("Couldn’t save position", { description: error.message });
+    } else {
+      const id = c.key.slice(3);
+      const { error } = await supabase
+        .from("ir_signals")
+        .update({ pos_x: x, pos_y: y, pos_z: z })
+        .eq("id", id);
+      if (error) toast.error("Couldn’t save position", { description: error.message });
+    }
+  };
+
+  const openEdit = (c: RoomControl) => {
+    const sig = rf.find((s) => `rf:${s.slot}` === c.key);
+    if (!sig) return;
     setEdit(sig);
     setEditLabel(sig.label);
     setEditIcon(sig.icon);
@@ -114,17 +194,24 @@ export function RoomView() {
     <div className="relative h-[calc(100vh-65px)] w-full overflow-hidden">
       <div className="pointer-events-none absolute inset-x-0 top-4 z-10 flex items-start justify-between px-4">
         <div className="pointer-events-auto rounded-full border border-border bg-card/80 px-4 py-1.5 text-xs text-muted-foreground backdrop-blur">
-          {signals.length === 0
-            ? "No controls yet — add your first device"
+          {editing
+            ? "Edit mode · drag a button onto its device — it saves where you drop it"
             : "Drag to look around · scroll to zoom · tap a control to send"}
         </div>
-        <Button
-          onClick={() => setAddOpen(true)}
-          className="pointer-events-auto gap-1.5 shadow-lg"
-        >
-          <Plus className="h-4 w-4" />
-          Add device
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant={editing ? "default" : "outline"}
+            onClick={() => setEditing((v) => !v)}
+            className="pointer-events-auto gap-1.5 shadow-lg"
+          >
+            {editing ? <Check className="h-4 w-4" /> : <Move className="h-4 w-4" />}
+            {editing ? "Done" : "Edit layout"}
+          </Button>
+          <Button onClick={() => setAddOpen(true)} className="pointer-events-auto gap-1.5 shadow-lg">
+            <Plus className="h-4 w-4" />
+            Add device
+          </Button>
+        </div>
       </div>
 
       {mounted ? (
@@ -135,7 +222,13 @@ export function RoomView() {
             </div>
           }
         >
-          <Room3D signals={signals} onSend={send} onEdit={openEdit} />
+          <Room3D
+            controls={controls}
+            editing={editing}
+            onSend={send}
+            onEdit={openEdit}
+            onMove={move}
+          />
         </Suspense>
       ) : (
         <div className="flex h-full items-center justify-center text-muted-foreground">
@@ -146,7 +239,7 @@ export function RoomView() {
       <AddControlDialog
         open={addOpen}
         onOpenChange={setAddOpen}
-        existing={signals}
+        existing={rf}
         onCreated={(slot, label) => setLearn({ slot, label })}
       />
       <LearnModal
