@@ -24,6 +24,20 @@ export function Header({ connected }: { connected: boolean }) {
           Room
         </Link>
         <Link
+          to="/remotes"
+          className="rounded-full px-3 py-1 text-muted-foreground transition-colors hover:text-foreground"
+          activeProps={{ className: "rounded-full px-3 py-1 bg-primary/15 text-primary" }}
+        >
+          Remotes
+        </Link>
+        <Link
+          to="/alarms"
+          className="rounded-full px-3 py-1 text-muted-foreground transition-colors hover:text-foreground"
+          activeProps={{ className: "rounded-full px-3 py-1 bg-primary/15 text-primary" }}
+        >
+          Alarms
+        </Link>
+        <Link
           to="/events"
           className="rounded-full px-3 py-1 text-muted-foreground transition-colors hover:text-foreground"
           activeProps={{ className: "rounded-full px-3 py-1 bg-primary/15 text-primary" }}

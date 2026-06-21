@@ -26,3 +26,44 @@ export type RfSignal = {
   created_at: string;
 };
 
+/* ── IR (TV / speaker / AC) — learned by the P4, transmitted by the clock ── */
+
+export type IrDevice = "tv" | "speaker" | "ac";
+
+export type IrIcon =
+  | "power"
+  | "volume-up"
+  | "volume-down"
+  | "volume-x"
+  | "play"
+  | "pause"
+  | "skip-forward"
+  | "skip-back"
+  | "tv"
+  | "speaker"
+  | "snowflake"
+  | "sun"
+  | "fan"
+  | "chevron-up"
+  | "chevron-down";
+
+export type IrSignal = {
+  id: string;
+  label: string;
+  device: IrDevice;
+  icon: IrIcon;
+  code: number[];
+  created_at: string;
+};
+
+/* ── Alarms — shared by the clock and the website ── */
+
+export type Alarm = {
+  id: string;
+  hour: number; // 0..23
+  minute: number; // 0..59
+  enabled: boolean;
+  label: string;
+  created_at: string;
+};
+
