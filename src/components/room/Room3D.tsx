@@ -1,4 +1,4 @@
-import { Canvas, useFrame, type ThreeEvent } from "@react-three/fiber";
+import { Canvas, useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
 import { OrbitControls, Html, Edges } from "@react-three/drei";
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
@@ -516,6 +516,74 @@ function Marker({
   );
 }
 
+/* WASD + Space/Shift fly-around. Moves the camera and the OrbitControls target
+   together so the orbit pivot follows you. Disabled in edit mode (there those
+   keys nudge the selected button instead). */
+function KeyboardFly({
+  enabled,
+  controlsRef,
+}: {
+  enabled: boolean;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  controlsRef: React.MutableRefObject<any>;
+}) {
+  const { camera } = useThree();
+  const keys = useRef<Record<string, boolean>>({});
+  const enabledRef = useRef(enabled);
+  enabledRef.current = enabled;
+
+  useEffect(() => {
+    const MOVE = new Set(["w", "a", "s", "d", "space", "shift"]);
+    const norm = (e: KeyboardEvent) => (e.key === " " ? "space" : e.key.toLowerCase());
+    const down = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement | null;
+      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable))
+        return;
+      const k = norm(e);
+      if (!MOVE.has(k)) return;
+      keys.current[k] = true;
+      if (enabledRef.current) e.preventDefault();
+    };
+    const up = (e: KeyboardEvent) => {
+      keys.current[norm(e)] = false;
+    };
+    window.addEventListener("keydown", down);
+    window.addEventListener("keyup", up);
+    return () => {
+      window.removeEventListener("keydown", down);
+      window.removeEventListener("keyup", up);
+    };
+  }, []);
+
+  const fwd = useRef(new THREE.Vector3());
+  const right = useRef(new THREE.Vector3());
+  const move = useRef(new THREE.Vector3());
+  const UP = useRef(new THREE.Vector3(0, 1, 0));
+
+  useFrame((_, dt) => {
+    if (!enabledRef.current) return;
+    const k = keys.current;
+    const m = move.current.set(0, 0, 0);
+    camera.getWorldDirection(fwd.current);
+    fwd.current.y = 0;
+    if (fwd.current.lengthSq() < 1e-6) return;
+    fwd.current.normalize();
+    right.current.crossVectors(fwd.current, UP.current).normalize();
+    if (k["w"]) m.add(fwd.current);
+    if (k["s"]) m.sub(fwd.current);
+    if (k["d"]) m.add(right.current);
+    if (k["a"]) m.sub(right.current);
+    if (k["space"]) m.y += 1;
+    if (k["shift"]) m.y -= 1;
+    if (m.lengthSq() === 0) return;
+    m.normalize().multiplyScalar(9 * dt); // ~9 ft/s
+    camera.position.add(m);
+    if (controlsRef.current) controlsRef.current.target.add(m);
+  });
+
+  return null;
+}
+
 export function Room3D({
   controls,
   editing,
@@ -532,6 +600,8 @@ export function Room3D({
   const [draggingKey, setDraggingKey] = useState<string | null>(null);
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [override, setOverride] = useState<Record<string, [number, number, number]>>({});
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const controlsRef = useRef<any>(null);
 
   // Refs so the surface-move / pointerup / keydown handlers see live values.
   const draggingRef = useRef<string | null>(null);
@@ -653,7 +723,10 @@ export function Room3D({
         />
       ))}
 
+      <KeyboardFly enabled={!editing} controlsRef={controlsRef} />
+
       <OrbitControls
+        ref={controlsRef}
         makeDefault
         enabled={draggingKey === null}
         target={[0, 3.2, 0]}

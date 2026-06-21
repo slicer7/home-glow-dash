@@ -196,7 +196,7 @@ export function RoomView() {
         <div className="pointer-events-auto rounded-full border border-border bg-card/80 px-4 py-1.5 text-xs text-muted-foreground backdrop-blur">
           {editing
             ? "Edit mode · drag a button onto its device, or click to select then nudge: arrows = N/E/S/W, space = up, shift = down"
-            : "Drag to look around · scroll to zoom · tap a control to send"}
+            : "Drag to look · scroll to zoom · WASD to move, space/shift up/down · tap a control to send"}
         </div>
         <div className="flex items-center gap-2">
           <Button
