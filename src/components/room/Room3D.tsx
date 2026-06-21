@@ -363,38 +363,6 @@ function AcUnit() {
   );
 }
 
-/* ── Bay window with cushioned seat + curtains (North wall, east portion). ─── */
-function BayWindow() {
-  const x = HX; // east wall plane
-  const cz = 2.2; // moved a little north (left)
-  return (
-    <group>
-      {/* bay nook protruding OUTSIDE the room, through the east wall */}
-      <mesh position={[x + 1.0, 4.2, cz]}>
-        <boxGeometry args={[2.0, 3.0, 3.6]} />
-        <meshStandardMaterial color={C.glass} transparent opacity={0.22} side={THREE.DoubleSide} />
-      </mesh>
-      {/* outer glass face */}
-      <mesh position={[x + 2.0, 4.2, cz]} rotation={[0, Math.PI / 2, 0]}>
-        <planeGeometry args={[3.4, 2.8]} />
-        <meshStandardMaterial color={C.glass} transparent opacity={0.4} emissive="#dff0ff" emissiveIntensity={0.25} />
-      </mesh>
-      {/* window seat (inside, at the wall) */}
-      <mesh position={[x - 0.55, 1.6, cz]}>
-        <boxGeometry args={[1.1, 0.4, 3.5]} />
-        <meshStandardMaterial color="#b9c4cf" roughness={1} />
-      </mesh>
-      {/* curtains (inside, at the wall edges) */}
-      {[-1.8, 1.8].map((dz, i) => (
-        <mesh key={i} position={[x - 0.1, 4.4, cz + dz]}>
-          <boxGeometry args={[0.08, 4.2, 0.7]} />
-          <meshStandardMaterial color={C.curtain} roughness={1} />
-        </mesh>
-      ))}
-    </group>
-  );
-}
-
 /* ── Door (West wall, south end, by the bed) + closet (South wall). ───────── */
 function SouthWall() {
   const z = HZ - 0.06;
@@ -663,7 +631,6 @@ export function Room3D({
         <DeskArea />
         <TvWall />
         <AcUnit />
-        <BayWindow />
         <SouthWall />
         <AudioBits />
         <CeilingFan />
