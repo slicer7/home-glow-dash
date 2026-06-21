@@ -136,11 +136,6 @@ function LoftBed() {
         <boxGeometry args={[x1 - x0 - 0.4, 0.5, z1 - z0 - 0.4]} />
         <meshStandardMaterial color="#d9d4c8" roughness={0.95} />
       </mesh>
-      {/* bedding lump */}
-      <mesh position={[cx + 0.3, deckY + 0.7, cz - 1.5]}>
-        <boxGeometry args={[2.6, 0.6, 2.2]} />
-        <meshStandardMaterial color={C.metalDark} roughness={1} />
-      </mesh>
       {/* guard rail on the open (east) side */}
       <mesh position={[x1 - 0.05, deckY + 0.7, cz]}>
         <boxGeometry args={[0.06, 0.9, z1 - z0 - 0.6]} />
@@ -170,14 +165,17 @@ function LoftBed() {
         </mesh>
       </group>
 
-      {/* Stairs / cubby shelf at the south end (next to the door) */}
-      <group position={[x0 + 1.0, 0, z1 - 0.4]}>
-        {[0, 1, 2, 3, 4].map((i) => (
-          <mesh key={i} position={[0, 0.5 + i * 0.95, i * 0.0]}>
-            <boxGeometry args={[1.8, 0.95, 1.4]} />
-            <meshStandardMaterial color={C.metalDark2} roughness={0.8} />
-          </mesh>
-        ))}
+      {/* Stair-cubbies climbing to the deck at the south (left) end, by the door */}
+      <group position={[x0 + 1.0, 0, 0]}>
+        {[0, 1, 2, 3, 4].map((i) => {
+          const h = 1.0 + i * 0.95; // each riser is taller and set back toward the bed
+          return (
+            <mesh key={i} position={[0, h / 2, 3.5 - i * 0.5]}>
+              <boxGeometry args={[1.7, h, 0.7]} />
+              <meshStandardMaterial color={C.metalDark2} roughness={0.8} />
+            </mesh>
+          );
+        })}
       </group>
 
       {/* Clock at the head of the bed (north end), on the rail */}
@@ -213,11 +211,12 @@ function DeskArea() {
         <Edges color="#6d28d9" />
       </mesh>
 
-      {/* Monitors on the return (north wall), facing south into the room */}
-      <Monitor x={2.7} y={topY + 0.85} z={rz} w={3.0} h={1.1} rotY={0} />
-      <Monitor x={4.4} y={topY + 0.95} z={rz} w={1.0} h={1.7} rotY={0} />
+      {/* Monitors on the return (north wall), facing south into the room;
+          vertical monitor sits to the LEFT of the main ultrawide */}
+      <Monitor x={3.3} y={topY + 0.85} z={rz} w={2.4} h={1.1} rotY={0} />
+      <Monitor x={1.6} y={topY + 0.95} z={rz} w={1.0} h={1.7} rotY={0} />
       {/* LED lightbar above the main monitor */}
-      <mesh position={[2.7, topY + 1.55, rz]}>
+      <mesh position={[3.3, topY + 1.55, rz]}>
         <boxGeometry args={[2.6, 0.06, 0.12]} />
         <meshStandardMaterial color="#222" emissive="#fff2cc" emissiveIntensity={0.6} />
       </mesh>
@@ -331,8 +330,8 @@ function TvWall() {
         <meshStandardMaterial color="#1b1b1b" roughness={0.5} />
       </mesh>
 
-      {/* P4 hub on the desk, just south of (left of) the TV */}
-      <group position={[HX - 0.7, 2.62, -2.6]}>
+      {/* P4 hub on the desk, near the L corner */}
+      <group position={[4.8, 2.62, -3.6]}>
         <mesh>
           <boxGeometry args={[0.7, 0.22, 0.5]} />
           <meshStandardMaterial color={C.metalDark2} />
@@ -366,28 +365,28 @@ function AcUnit() {
 
 /* ── Bay window with cushioned seat + curtains (North wall, east portion). ─── */
 function BayWindow() {
-  const x = HX; // east wall
-  const cz = 3.2; // south portion, by the AC
+  const x = HX; // east wall plane
+  const cz = 2.2; // moved a little north (left)
   return (
     <group>
-      {/* bay box jutting west into the room */}
-      <mesh position={[x - 1.0, 4.2, cz]}>
+      {/* bay nook protruding OUTSIDE the room, through the east wall */}
+      <mesh position={[x + 1.0, 4.2, cz]}>
         <boxGeometry args={[2.0, 3.0, 3.6]} />
-        <meshStandardMaterial color={C.glass} transparent opacity={0.25} side={THREE.DoubleSide} />
+        <meshStandardMaterial color={C.glass} transparent opacity={0.22} side={THREE.DoubleSide} />
       </mesh>
-      {/* glass pane on the wall, facing west into the room */}
-      <mesh position={[x - 0.02, 4.2, cz]} rotation={[0, -Math.PI / 2, 0]}>
+      {/* outer glass face */}
+      <mesh position={[x + 2.0, 4.2, cz]} rotation={[0, Math.PI / 2, 0]}>
         <planeGeometry args={[3.4, 2.8]} />
         <meshStandardMaterial color={C.glass} transparent opacity={0.4} emissive="#dff0ff" emissiveIntensity={0.25} />
       </mesh>
-      {/* window seat cushion */}
-      <mesh position={[x - 1.0, 1.6, cz]}>
-        <boxGeometry args={[1.9, 0.4, 3.5]} />
+      {/* window seat (inside, at the wall) */}
+      <mesh position={[x - 0.55, 1.6, cz]}>
+        <boxGeometry args={[1.1, 0.4, 3.5]} />
         <meshStandardMaterial color="#b9c4cf" roughness={1} />
       </mesh>
-      {/* curtains (two panels along the wall) */}
+      {/* curtains (inside, at the wall edges) */}
       {[-1.8, 1.8].map((dz, i) => (
-        <mesh key={i} position={[x - 0.18, 4.4, cz + dz]}>
+        <mesh key={i} position={[x - 0.1, 4.4, cz + dz]}>
           <boxGeometry args={[0.08, 4.2, 0.7]} />
           <meshStandardMaterial color={C.curtain} roughness={1} />
         </mesh>
@@ -428,15 +427,15 @@ function AudioBits() {
     // rear surrounds — sitting on top of the couch back
     [-5.1, 2.4, -4.8],
     [-5.1, 2.4, 0.5],
-    // front surrounds — flanking the TV on the desk wall
-    [HX - 0.4, 4.6, -5.6],
-    [HX - 0.4, 4.6, -2.2],
+    // front surrounds — on the desk (left end + near the corner)
+    [0.9, 2.85, -5.0],
+    [4.5, 2.85, -4.9],
   ];
   return (
     <group>
-      {/* subwoofer on the floor, next to the couch */}
-      <mesh position={[-2.0, 0.7, -2.0]}>
-        <boxGeometry args={[1.2, 1.4, 1.2]} />
+      {/* subwoofer on the floor, by the right (north) end of the couch */}
+      <mesh position={[-2.6, 0.55, -4.6]}>
+        <boxGeometry args={[0.9, 1.1, 0.9]} />
         <meshStandardMaterial color={C.black} roughness={0.5} />
       </mesh>
       {surround.map((p, i) => (
