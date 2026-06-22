@@ -2,7 +2,7 @@ import { Canvas, useFrame, useThree, type ThreeEvent } from "@react-three/fiber"
 import { OrbitControls, Html, Edges } from "@react-three/drei";
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
-import { Pencil } from "lucide-react";
+import { Pencil, EyeOff } from "lucide-react";
 import { iconFor } from "@/components/dashboard/rfIcons";
 import { irIconFor } from "@/components/dashboard/irIcons";
 
