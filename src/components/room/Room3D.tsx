@@ -736,6 +736,7 @@ export function Room3D({
           selected={selectedKey === c.key}
           onSend={onSend}
           onEdit={c.kind === "rf" ? onEdit : undefined}
+          onHide={onHide}
           onStartDrag={(ctrl) => {
             setDraggingKey(ctrl.key);
             setSelectedKey(ctrl.key);
