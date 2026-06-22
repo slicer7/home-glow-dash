@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Plus, RefreshCw, Trash2, Move, Check } from "lucide-react";
+import { Plus, RefreshCw, Trash2, Move, Check, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 
 /* Default marker positions (feet, room-centered) when a control hasn't been
@@ -55,6 +55,16 @@ export function RoomView() {
   const [edit, setEdit] = useState<RfSignal | null>(null);
   const [editLabel, setEditLabel] = useState("");
   const [editIcon, setEditIcon] = useState<RfIcon>("lightbulb");
+
+  /* Hidden controls in the 3D room — persisted to localStorage. */
+  const [hiddenKeys, setHiddenKeys] = useState<Set<string>>(() => {
+    try {
+      const raw = localStorage.getItem("room_hidden_keys");
+      return new Set(raw ? JSON.parse(raw) : []);
+    } catch {
+      return new Set<string>();
+    }
+  });
 
   useEffect(() => setMounted(true), []);
 
@@ -104,8 +114,8 @@ export function RoomView() {
         pos: hasPos(s) ? [s.pos_x!, s.pos_y!, s.pos_z!] : irDefault(s.device, i),
       };
     });
-    return [...rfControls, ...irControls];
-  }, [rf, ir]);
+    return [...rfControls, ...irControls].filter((c) => !hiddenKeys.has(c.key));
+  }, [rf, ir, hiddenKeys]);
 
   const send = async (c: RoomControl) => {
     toast.success("Sent ✓", { description: c.label });
@@ -155,6 +165,22 @@ export function RoomView() {
     }
   };
 
+  const handleHide = (c: RoomControl) => {
+    setHiddenKeys((prev) => {
+      const next = new Set(prev);
+      next.add(c.key);
+      localStorage.setItem("room_hidden_keys", JSON.stringify([...next]));
+      return next;
+    });
+    toast.success("Hidden from room", { description: c.label });
+  };
+
+  const showAllHidden = () => {
+    setHiddenKeys(new Set());
+    localStorage.removeItem("room_hidden_keys");
+    toast.success("All controls visible");
+  };
+
   const openEdit = (c: RoomControl) => {
     const sig = rf.find((s) => `rf:${s.slot}` === c.key);
     if (!sig) return;
@@ -202,7 +228,7 @@ export function RoomView() {
       <div className="pointer-events-none absolute inset-x-0 top-4 z-10 flex items-start justify-between px-4">
         <div className="pointer-events-auto rounded-full border border-border bg-card/80 px-4 py-1.5 text-xs text-muted-foreground backdrop-blur">
           {editing
-            ? "Edit mode · drag a button onto its device, or click to select then nudge: arrows = N/E/S/W, space = up, shift = down"
+            ? "Edit mode · drag a button onto its device, click to select then nudge (arrows = N/E/S/W, space = up, shift = down), or click the red × to hide"
             : "Drag to look · scroll to zoom · WASD to move, space/shift up/down · tap a control to send"}
         </div>
         <div className="flex items-center gap-2">
@@ -214,6 +240,16 @@ export function RoomView() {
             {editing ? <Check className="h-4 w-4" /> : <Move className="h-4 w-4" />}
             {editing ? "Done" : "Edit layout"}
           </Button>
+          {hiddenKeys.size > 0 && (
+            <Button
+              variant="outline"
+              onClick={showAllHidden}
+              className="pointer-events-auto gap-1.5 shadow-lg"
+            >
+              <Eye className="h-4 w-4" />
+              Show hidden ({hiddenKeys.size})
+            </Button>
+          )}
           <Button onClick={() => setAddOpen(true)} className="pointer-events-auto gap-1.5 shadow-lg">
             <Plus className="h-4 w-4" />
             Add device
@@ -234,6 +270,7 @@ export function RoomView() {
             editing={editing}
             onSend={send}
             onEdit={openEdit}
+            onHide={handleHide}
             onMove={move}
           />
         </Suspense>

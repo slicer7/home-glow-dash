@@ -2,7 +2,7 @@ import { Canvas, useFrame, useThree, type ThreeEvent } from "@react-three/fiber"
 import { OrbitControls, Html, Edges } from "@react-three/drei";
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
-import { Pencil } from "lucide-react";
+import { Pencil, EyeOff } from "lucide-react";
 import { iconFor } from "@/components/dashboard/rfIcons";
 import { irIconFor } from "@/components/dashboard/irIcons";
 
@@ -443,6 +443,7 @@ function Marker({
   selected,
   onSend,
   onEdit,
+  onHide,
   onStartDrag,
 }: {
   control: RoomControl;
@@ -452,6 +453,7 @@ function Marker({
   selected: boolean;
   onSend: (c: RoomControl) => void;
   onEdit?: (c: RoomControl) => void;
+  onHide?: (c: RoomControl) => void;
   onStartDrag: (c: RoomControl) => void;
 }) {
   const Icon = control.kind === "rf" ? iconFor(control.iconKey) : irIconFor(control.iconKey);
@@ -509,6 +511,22 @@ function Marker({
             className="rounded-full bg-background/90 p-1.5 text-muted-foreground shadow hover:text-foreground"
           >
             <Pencil className="h-3.5 w-3.5" />
+          </button>
+        </Html>
+      )}
+
+      {/* hide from room — rendered as its own Html so it stays clickable */}
+      {editing && onHide && (
+        <Html position={[-0.55, 0.55, 0]} center distanceFactor={9} zIndexRange={[30, 0]}>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onHide(control);
+            }}
+            title="Hide from room"
+            className="rounded-full bg-destructive/90 p-1.5 text-white shadow hover:bg-destructive"
+          >
+            <EyeOff className="h-3.5 w-3.5" />
           </button>
         </Html>
       )}
@@ -589,12 +607,14 @@ export function Room3D({
   editing,
   onSend,
   onEdit,
+  onHide,
   onMove,
 }: {
   controls: RoomControl[];
   editing: boolean;
   onSend: (c: RoomControl) => void;
   onEdit: (c: RoomControl) => void;
+  onHide?: (c: RoomControl) => void;
   onMove: (c: RoomControl, pos: [number, number, number]) => void;
 }) {
   const [draggingKey, setDraggingKey] = useState<string | null>(null);
@@ -716,6 +736,7 @@ export function Room3D({
           selected={selectedKey === c.key}
           onSend={onSend}
           onEdit={c.kind === "rf" ? onEdit : undefined}
+          onHide={onHide}
           onStartDrag={(ctrl) => {
             setDraggingKey(ctrl.key);
             setSelectedKey(ctrl.key);
