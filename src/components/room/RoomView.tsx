@@ -165,6 +165,22 @@ export function RoomView() {
     }
   };
 
+  const handleHide = (c: RoomControl) => {
+    setHiddenKeys((prev) => {
+      const next = new Set(prev);
+      next.add(c.key);
+      localStorage.setItem("room_hidden_keys", JSON.stringify([...next]));
+      return next;
+    });
+    toast.success("Hidden from room", { description: c.label });
+  };
+
+  const showAllHidden = () => {
+    setHiddenKeys(new Set());
+    localStorage.removeItem("room_hidden_keys");
+    toast.success("All controls visible");
+  };
+
   const openEdit = (c: RoomControl) => {
     const sig = rf.find((s) => `rf:${s.slot}` === c.key);
     if (!sig) return;
