@@ -37,6 +37,14 @@ export function Header({ connected }: { connected: boolean }) {
         >
           Scenes
         </Link>
+        <Link
+          to="/devices"
+          className="rounded-full px-3 py-1 text-muted-foreground transition-colors hover:text-foreground"
+          activeProps={{ className: "rounded-full px-3 py-1 bg-primary/15 text-primary" }}
+        >
+          Devices
+        </Link>
+
 
         <Link
           to="/alarms"
