@@ -114,8 +114,8 @@ export function RoomView() {
         pos: hasPos(s) ? [s.pos_x!, s.pos_y!, s.pos_z!] : irDefault(s.device, i),
       };
     });
-    return [...rfControls, ...irControls];
-  }, [rf, ir]);
+    return [...rfControls, ...irControls].filter((c) => !hiddenKeys.has(c.key));
+  }, [rf, ir, hiddenKeys]);
 
   const send = async (c: RoomControl) => {
     toast.success("Sent ✓", { description: c.label });
