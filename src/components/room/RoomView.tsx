@@ -108,24 +108,31 @@ export function RoomView() {
   }, [rf, ir]);
 
   const send = async (c: RoomControl) => {
-    if (c.kind === "rf") {
-      const slot = Number(c.key.slice(3));
-      toast.success("Sent ✓", { description: c.label });
-      const { error } = await supabase.from("commands").insert({
-        target_device: "p4_hub",
-        command: "rf_send",
-        params: { slot },
-      });
-      if (error) toast.error("Send failed", { description: error.message });
-    } else {
-      const id = c.key.slice(3);
-      toast.success("Sent ✓", { description: c.label });
-      const { error } = await supabase.from("commands").insert({
-        target_device: "clock",
-        command: "ir_send",
-        params: { signal_id: id },
-      });
-      if (error) toast.error("Send failed", { description: error.message });
+    toast.success("Sent ✓", { description: c.label });
+    const insert: { target_device: string; command: string; params: Record<string, unknown> } =
+      c.kind === "rf"
+        ? { target_device: "p4_hub", command: "rf_send", params: { slot: Number(c.key.slice(3)) } }
+        : { target_device: "clock", command: "ir_send", params: { signal_id: c.key.slice(3) } };
+    const { error } = await supabase.from("commands").insert(insert);
+    if (error) {
+      toast.error("Send failed", { description: error.message });
+      return;
+    }
+    // If this control is a tracked power device, flip its on/off state too, so
+    // the 3D room stays in sync with the Remotes page and the P4. (c.key is
+    // already the power_states ref: "rf:<slot>" or "ir:<id>".)
+    const ref = c.key;
+    const { data } = await supabase
+      .from("power_states")
+      .select("is_on")
+      .eq("ref", ref)
+      .maybeSingle();
+    const current = (data as { is_on: boolean } | null)?.is_on;
+    if (typeof current === "boolean") {
+      await supabase
+        .from("power_states")
+        .update({ is_on: !current, updated_at: new Date().toISOString() })
+        .eq("ref", ref);
     }
   };
 
