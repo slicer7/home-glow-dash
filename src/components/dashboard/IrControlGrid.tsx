@@ -107,8 +107,28 @@ export function IrControlGrid() {
       command: "ir_send",
       params: { signal_id: sig.id },
     });
-    if (error) toast.error("Send failed", { description: error.message });
+    if (error) {
+      toast.error("Send failed", { description: error.message });
+      return;
+    }
+    // If this button is a tracked power device, flip is_on
+    if (sig.icon === "power") {
+      const ref = `ir:${sig.id}`;
+      const { data } = await supabase
+        .from("power_states")
+        .select("is_on")
+        .eq("ref", ref)
+        .maybeSingle();
+      const current = (data as { is_on: boolean } | null)?.is_on;
+      if (typeof current === "boolean") {
+        await supabase
+          .from("power_states")
+          .update({ is_on: !current, updated_at: new Date().toISOString() })
+          .eq("ref", ref);
+      }
+    }
   };
+
 
   const remove = async (sig: IrSignal) => {
     const { error } = await supabase.from("ir_signals").delete().eq("id", sig.id);

@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as ScenesRouteImport } from './routes/scenes'
 import { Route as RemotesRouteImport } from './routes/remotes'
 import { Route as EventsRouteImport } from './routes/events'
+import { Route as DevicesRouteImport } from './routes/devices'
 import { Route as AlarmsRouteImport } from './routes/alarms'
 import { Route as IndexRouteImport } from './routes/index'
 
@@ -30,6 +31,11 @@ const EventsRoute = EventsRouteImport.update({
   path: '/events',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DevicesRoute = DevicesRouteImport.update({
+  id: '/devices',
+  path: '/devices',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AlarmsRoute = AlarmsRouteImport.update({
   id: '/alarms',
   path: '/alarms',
@@ -44,6 +50,7 @@ const IndexRoute = IndexRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/alarms': typeof AlarmsRoute
+  '/devices': typeof DevicesRoute
   '/events': typeof EventsRoute
   '/remotes': typeof RemotesRoute
   '/scenes': typeof ScenesRoute
@@ -51,6 +58,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/alarms': typeof AlarmsRoute
+  '/devices': typeof DevicesRoute
   '/events': typeof EventsRoute
   '/remotes': typeof RemotesRoute
   '/scenes': typeof ScenesRoute
@@ -59,21 +67,30 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/alarms': typeof AlarmsRoute
+  '/devices': typeof DevicesRoute
   '/events': typeof EventsRoute
   '/remotes': typeof RemotesRoute
   '/scenes': typeof ScenesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/alarms' | '/events' | '/remotes' | '/scenes'
+  fullPaths: '/' | '/alarms' | '/devices' | '/events' | '/remotes' | '/scenes'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/alarms' | '/events' | '/remotes' | '/scenes'
-  id: '__root__' | '/' | '/alarms' | '/events' | '/remotes' | '/scenes'
+  to: '/' | '/alarms' | '/devices' | '/events' | '/remotes' | '/scenes'
+  id:
+    | '__root__'
+    | '/'
+    | '/alarms'
+    | '/devices'
+    | '/events'
+    | '/remotes'
+    | '/scenes'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AlarmsRoute: typeof AlarmsRoute
+  DevicesRoute: typeof DevicesRoute
   EventsRoute: typeof EventsRoute
   RemotesRoute: typeof RemotesRoute
   ScenesRoute: typeof ScenesRoute
@@ -102,6 +119,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EventsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/devices': {
+      id: '/devices'
+      path: '/devices'
+      fullPath: '/devices'
+      preLoaderRoute: typeof DevicesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/alarms': {
       id: '/alarms'
       path: '/alarms'
@@ -122,6 +146,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AlarmsRoute: AlarmsRoute,
+  DevicesRoute: DevicesRoute,
   EventsRoute: EventsRoute,
   RemotesRoute: RemotesRoute,
   ScenesRoute: ScenesRoute,

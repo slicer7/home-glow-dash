@@ -1,5 +1,11 @@
 import { useEffect, useState } from "react";
-import { supabase, type Scene, type SceneStep } from "@/lib/supabase";
+import {
+  supabase,
+  sendPowerToggle,
+  type Scene,
+  type SceneStep,
+} from "@/lib/supabase";
+
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -16,6 +22,24 @@ async function runStep(step: SceneStep): Promise<void> {
   if (step.kind === "delay") {
     return new Promise((r) => setTimeout(r, step.ms));
   }
+  if (step.kind === "power") {
+    const { data, error } = await supabase
+      .from("power_states")
+      .select("is_on")
+      .eq("ref", step.ref)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    const current = (data as { is_on: boolean } | null)?.is_on;
+    if (current === step.desired) return; // already in desired state — skip
+    const send = await sendPowerToggle(step.ref);
+    if (send.error) throw new Error(send.error.message);
+    const upd = await supabase
+      .from("power_states")
+      .update({ is_on: step.desired, updated_at: new Date().toISOString() })
+      .eq("ref", step.ref);
+    if (upd.error) throw new Error(upd.error.message);
+    return;
+  }
   const insert: { target_device: string; command: string; params: Record<string, unknown> } =
     step.kind === "rf"
       ? { target_device: "p4_hub", command: "rf_send", params: { slot: step.slot } }
@@ -23,6 +47,7 @@ async function runStep(step: SceneStep): Promise<void> {
   const { error } = await supabase.from("commands").insert(insert);
   if (error) throw new Error(error.message);
 }
+
 
 export function ScenesGrid() {
   const [scenes, setScenes] = useState<Scene[]>([]);

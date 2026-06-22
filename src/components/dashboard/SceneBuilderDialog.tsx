@@ -1,11 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   supabase,
+  powerRefFromIr,
+  powerRefFromRf,
   type RfSignal,
   type IrSignal,
   type Scene,
   type SceneIcon,
   type SceneStep,
+  type PowerState,
 } from "@/lib/supabase";
 import {
   Dialog,
@@ -20,8 +23,18 @@ import { Button } from "@/components/ui/button";
 import { SCENE_ICONS } from "./sceneIcons";
 import { iconFor as rfIconFor } from "./rfIcons";
 import { irIconFor } from "./irIcons";
-import { Radio, Tv, Timer, X, ArrowUp, ArrowDown, Plus } from "lucide-react";
+import {
+  Radio,
+  Tv,
+  Timer,
+  X,
+  ArrowUp,
+  ArrowDown,
+  Plus,
+  Power as PowerIcon,
+} from "lucide-react";
 import { toast } from "sonner";
+
 
 type Props = {
   open: boolean;
@@ -38,6 +51,7 @@ export function SceneBuilderDialog({ open, onOpenChange, scene, onSaved }: Props
   const [steps, setSteps] = useState<SceneStep[]>([]);
   const [rf, setRf] = useState<RfSignal[]>([]);
   const [ir, setIr] = useState<IrSignal[]>([]);
+  const [tracked, setTracked] = useState<PowerState[]>([]);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -46,14 +60,17 @@ export function SceneBuilderDialog({ open, onOpenChange, scene, onSaved }: Props
     setIcon(scene?.icon ?? "film");
     setSteps(scene?.steps ?? []);
     (async () => {
-      const [rfRes, irRes] = await Promise.all([
+      const [rfRes, irRes, psRes] = await Promise.all([
         supabase.from("rf_signals").select("*").order("slot"),
         supabase.from("ir_signals").select("*").order("device").order("created_at"),
+        supabase.from("power_states").select("*").order("name"),
       ]);
       setRf((rfRes.data ?? []) as RfSignal[]);
       setIr((irRes.data ?? []) as IrSignal[]);
+      setTracked((psRes.data ?? []) as PowerState[]);
     })();
   }, [open, scene]);
+
 
   const learnedRf = useMemo(() => rf.filter((s) => s.learned), [rf]);
   const learnedIr = useMemo(() => ir.filter((s) => (s.code?.length ?? 0) > 0), [ir]);
@@ -151,13 +168,18 @@ export function SceneBuilderDialog({ open, onOpenChange, scene, onSaved }: Props
                       ? rfIconFor(rf.find((r) => r.slot === s.slot)?.icon ?? "power")
                       : s.kind === "ir"
                         ? irIconFor(ir.find((r) => r.id === s.signal_id)?.icon ?? "power")
-                        : Timer;
+                        : s.kind === "power"
+                          ? PowerIcon
+                          : Timer;
                   const label =
                     s.kind === "delay"
                       ? `Wait ${s.ms} ms`
                       : s.kind === "rf"
                         ? `RF · ${s.label}`
-                        : `IR · ${s.label}`;
+                        : s.kind === "ir"
+                          ? `IR · ${s.label}`
+                          : `${s.name} → ${s.desired ? "ON" : "OFF"}`;
+
                   return (
                     <li
                       key={i}
@@ -264,6 +286,57 @@ export function SceneBuilderDialog({ open, onOpenChange, scene, onSaved }: Props
 
             <div>
               <div className="mb-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+                <PowerIcon className="h-3.5 w-3.5" /> Turn on/off (tracked devices)
+              </div>
+              {tracked.length === 0 ? (
+                <p className="text-xs text-muted-foreground/70">
+                  No tracked devices. Add some on the Devices page.
+                </p>
+              ) : (
+                <div className="space-y-1.5">
+                  {tracked.map((d) => (
+                    <div
+                      key={d.ref}
+                      className="flex items-center gap-2 rounded-lg border border-border bg-background/40 px-2.5 py-1.5"
+                    >
+                      <PowerIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                      <span className="flex-1 truncate text-xs">{d.name}</span>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          addStep({
+                            kind: "power",
+                            ref: d.ref,
+                            name: d.name,
+                            desired: true,
+                          })
+                        }
+                        className="rounded-full border border-border bg-background/60 px-2 py-0.5 text-[11px] hover:border-primary hover:text-primary"
+                      >
+                        Turn ON
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          addStep({
+                            kind: "power",
+                            ref: d.ref,
+                            name: d.name,
+                            desired: false,
+                          })
+                        }
+                        className="rounded-full border border-border bg-background/60 px-2 py-0.5 text-[11px] hover:border-primary hover:text-primary"
+                      >
+                        Turn OFF
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div>
+              <div className="mb-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
                 <Timer className="h-3.5 w-3.5" /> Delay
               </div>
               <div className="flex flex-wrap gap-1.5">
@@ -281,6 +354,7 @@ export function SceneBuilderDialog({ open, onOpenChange, scene, onSaved }: Props
               </div>
             </div>
           </div>
+
         </div>
 
         <DialogFooter>
