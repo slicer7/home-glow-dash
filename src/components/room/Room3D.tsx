@@ -443,6 +443,7 @@ function Marker({
   selected,
   onSend,
   onEdit,
+  onHide,
   onStartDrag,
 }: {
   control: RoomControl;
