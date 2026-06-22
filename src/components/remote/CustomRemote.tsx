@@ -181,7 +181,7 @@ type RemoteItem = {
 export function CustomRemote() {
   const [irSignals, setIrSignals] = useState<IrSignal[]>([]);
   const [rfSignals, setRfSignals] = useState<RfSignal[]>([]);
-  const [layout, setLayout] = useState<Layout>(() => loadLayout());
+  const [layout, setLayout] = useState<Layout>(() => loadLayoutLocal());
   const [editing, setEditing] = useState(false);
   const [selectedRef, setSelectedRef] = useState<string | null>(null);
   const [selectedText, setSelectedText] = useState<string | null>(null);
@@ -287,7 +287,7 @@ export function CustomRemote() {
     if (changed) {
       const merged = { ...layout, buttons: next };
       setLayout(merged);
-      saveLayout(merged);
+      persistLayout(merged);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [items.length]);
@@ -295,7 +295,7 @@ export function CustomRemote() {
   const updateLayout = (mut: (l: Layout) => Layout) => {
     setLayout((prev) => {
       const next = mut(prev);
-      saveLayout(next);
+      persistLayout(next);
       return next;
     });
   };
@@ -507,7 +507,7 @@ export function CustomRemote() {
   const resetLayout = () => {
     if (!confirm("Reset the remote layout? Custom positions, sizes, colors and text boxes will be cleared."))
       return;
-    saveLayout({ buttons: {}, texts: [] });
+    persistLayout({ buttons: {}, texts: [] });
     setLayout({ buttons: {}, texts: [] });
     setSelectedRef(null);
     setSelectedText(null);
