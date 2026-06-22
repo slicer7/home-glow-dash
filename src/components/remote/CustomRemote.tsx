@@ -233,6 +233,28 @@ export function CustomRemote() {
     };
   }, []);
 
+  /* ---------- cloud-synced layout ---------- */
+  useEffect(() => {
+    let alive = true;
+    fetchSetting<Layout>(SETTINGS_KEY).then((cloud) => {
+      if (!alive || !cloud) return;
+      setLayout({
+        buttons: cloud.buttons ?? {},
+        texts: cloud.texts ?? [],
+      });
+    });
+    const unsub = subscribeSetting<Layout>(SETTINGS_KEY, (next) => {
+      setLayout({
+        buttons: next.buttons ?? {},
+        texts: next.texts ?? [],
+      });
+    });
+    return () => {
+      alive = false;
+      unsub();
+    };
+  }, []);
+
   /* ---------- items & layout merge ---------- */
   const items: RemoteItem[] = useMemo(() => {
     const ir = irSignals.map<RemoteItem>((s) => ({
