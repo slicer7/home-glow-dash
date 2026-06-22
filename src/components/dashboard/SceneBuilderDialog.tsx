@@ -51,6 +51,7 @@ export function SceneBuilderDialog({ open, onOpenChange, scene, onSaved }: Props
   const [steps, setSteps] = useState<SceneStep[]>([]);
   const [rf, setRf] = useState<RfSignal[]>([]);
   const [ir, setIr] = useState<IrSignal[]>([]);
+  const [tracked, setTracked] = useState<PowerState[]>([]);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -59,14 +60,17 @@ export function SceneBuilderDialog({ open, onOpenChange, scene, onSaved }: Props
     setIcon(scene?.icon ?? "film");
     setSteps(scene?.steps ?? []);
     (async () => {
-      const [rfRes, irRes] = await Promise.all([
+      const [rfRes, irRes, psRes] = await Promise.all([
         supabase.from("rf_signals").select("*").order("slot"),
         supabase.from("ir_signals").select("*").order("device").order("created_at"),
+        supabase.from("power_states").select("*").order("name"),
       ]);
       setRf((rfRes.data ?? []) as RfSignal[]);
       setIr((irRes.data ?? []) as IrSignal[]);
+      setTracked((psRes.data ?? []) as PowerState[]);
     })();
   }, [open, scene]);
+
 
   const learnedRf = useMemo(() => rf.filter((s) => s.learned), [rf]);
   const learnedIr = useMemo(() => ir.filter((s) => (s.code?.length ?? 0) > 0), [ir]);
