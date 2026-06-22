@@ -26,6 +26,14 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Plus, RefreshCw, Trash2, Move, Check, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
+import {
+  fetchSetting,
+  readLocal,
+  saveSetting,
+  subscribeSetting,
+} from "@/lib/cloudSettings";
+
+const HIDDEN_KEYS_SETTING = "room_hidden_keys_v1";
 
 /* Default marker positions (feet, room-centered) when a control hasn't been
  * placed yet — see Room3D for the coordinate frame. */
