@@ -9,11 +9,17 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ScenesRouteImport } from './routes/scenes'
 import { Route as RemotesRouteImport } from './routes/remotes'
 import { Route as EventsRouteImport } from './routes/events'
 import { Route as AlarmsRouteImport } from './routes/alarms'
 import { Route as IndexRouteImport } from './routes/index'
 
+const ScenesRoute = ScenesRouteImport.update({
+  id: '/scenes',
+  path: '/scenes',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RemotesRoute = RemotesRouteImport.update({
   id: '/remotes',
   path: '/remotes',
@@ -40,12 +46,14 @@ export interface FileRoutesByFullPath {
   '/alarms': typeof AlarmsRoute
   '/events': typeof EventsRoute
   '/remotes': typeof RemotesRoute
+  '/scenes': typeof ScenesRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/alarms': typeof AlarmsRoute
   '/events': typeof EventsRoute
   '/remotes': typeof RemotesRoute
+  '/scenes': typeof ScenesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -53,13 +61,14 @@ export interface FileRoutesById {
   '/alarms': typeof AlarmsRoute
   '/events': typeof EventsRoute
   '/remotes': typeof RemotesRoute
+  '/scenes': typeof ScenesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/alarms' | '/events' | '/remotes'
+  fullPaths: '/' | '/alarms' | '/events' | '/remotes' | '/scenes'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/alarms' | '/events' | '/remotes'
-  id: '__root__' | '/' | '/alarms' | '/events' | '/remotes'
+  to: '/' | '/alarms' | '/events' | '/remotes' | '/scenes'
+  id: '__root__' | '/' | '/alarms' | '/events' | '/remotes' | '/scenes'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -67,10 +76,18 @@ export interface RootRouteChildren {
   AlarmsRoute: typeof AlarmsRoute
   EventsRoute: typeof EventsRoute
   RemotesRoute: typeof RemotesRoute
+  ScenesRoute: typeof ScenesRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/scenes': {
+      id: '/scenes'
+      path: '/scenes'
+      fullPath: '/scenes'
+      preLoaderRoute: typeof ScenesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/remotes': {
       id: '/remotes'
       path: '/remotes'
@@ -107,6 +124,7 @@ const rootRouteChildren: RootRouteChildren = {
   AlarmsRoute: AlarmsRoute,
   EventsRoute: EventsRoute,
   RemotesRoute: RemotesRoute,
+  ScenesRoute: ScenesRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
