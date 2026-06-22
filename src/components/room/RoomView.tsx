@@ -64,15 +64,25 @@ export function RoomView() {
   const [editLabel, setEditLabel] = useState("");
   const [editIcon, setEditIcon] = useState<RfIcon>("lightbulb");
 
-  /* Hidden controls in the 3D room — persisted to localStorage. */
-  const [hiddenKeys, setHiddenKeys] = useState<Set<string>>(() => {
-    try {
-      const raw = localStorage.getItem("room_hidden_keys");
-      return new Set(raw ? JSON.parse(raw) : []);
-    } catch {
-      return new Set<string>();
-    }
-  });
+  /* Hidden controls in the 3D room — synced via app_settings across devices. */
+  const [hiddenKeys, setHiddenKeys] = useState<Set<string>>(
+    () => new Set(readLocal<string[]>(HIDDEN_KEYS_SETTING, [])),
+  );
+
+  useEffect(() => {
+    let alive = true;
+    fetchSetting<string[]>(HIDDEN_KEYS_SETTING).then((arr) => {
+      if (!alive || !arr) return;
+      setHiddenKeys(new Set(arr));
+    });
+    const unsub = subscribeSetting<string[]>(HIDDEN_KEYS_SETTING, (arr) => {
+      setHiddenKeys(new Set(arr ?? []));
+    });
+    return () => {
+      alive = false;
+      unsub();
+    };
+  }, []);
 
   useEffect(() => setMounted(true), []);
 
