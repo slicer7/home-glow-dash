@@ -44,7 +44,7 @@ import {
 
 const MAX_GRID = 56; // px per cell (desktop)
 const MIN_GRID = 26; // px per cell (small phones)
-const COLS = 12;
+const COLS = 6;
 const MIN_ROWS = 14;
 const SETTINGS_KEY = "custom_remote_layout_v1";
 
