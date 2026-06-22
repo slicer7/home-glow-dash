@@ -42,7 +42,8 @@ import {
 /*  Layout / persistence                                              */
 /* ------------------------------------------------------------------ */
 
-const GRID = 56; // px per cell
+const MAX_GRID = 56; // px per cell (desktop)
+const MIN_GRID = 26; // px per cell (small phones)
 const COLS = 12;
 const MIN_ROWS = 14;
 const SETTINGS_KEY = "custom_remote_layout_v1";
@@ -195,6 +196,7 @@ export function CustomRemote() {
   >(null);
 
   const canvasRef = useRef<HTMLDivElement | null>(null);
+  const wrapRef = useRef<HTMLDivElement | null>(null);
   const dragRef = useRef<{
     kind: "button" | "text";
     id: string;
@@ -202,6 +204,27 @@ export function CustomRemote() {
     offsetY: number;
     pointerId: number;
   } | null>(null);
+
+  /* Responsive cell size — fits the canvas to the available width on mobile. */
+  const [GRID, setGRID] = useState<number>(MAX_GRID);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const compute = () => {
+      const el = wrapRef.current;
+      // 32px of horizontal padding on the canvas frame.
+      const avail = (el?.clientWidth ?? window.innerWidth) - 32;
+      const cell = Math.max(MIN_GRID, Math.min(MAX_GRID, Math.floor(avail / COLS)));
+      setGRID(cell);
+    };
+    compute();
+    const ro = new ResizeObserver(compute);
+    if (wrapRef.current) ro.observe(wrapRef.current);
+    window.addEventListener("resize", compute);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", compute);
+    };
+  }, []);
 
   /* ---------- data fetch ---------- */
   const refresh = async () => {
@@ -625,8 +648,9 @@ export function CustomRemote() {
       <div className={editing ? "grid gap-4 lg:grid-cols-[1fr_280px]" : "flex justify-center"}>
         {/* Canvas */}
         <div
+          ref={wrapRef}
           className="relative mx-auto w-full overflow-hidden rounded-[2rem] border border-zinc-800 bg-gradient-to-b from-zinc-900 via-zinc-950 to-black p-4 shadow-2xl"
-          style={{ maxWidth: COLS * GRID + 32 }}
+          style={{ maxWidth: COLS * MAX_GRID + 32 }}
         >
           {/* Brushed metal highlight */}
           <div className="pointer-events-none absolute inset-0 rounded-[2rem] bg-gradient-to-b from-white/[0.04] to-transparent" />
