@@ -45,10 +45,16 @@ type Props = {
 
 const DELAY_PRESETS = [500, 1000, 2000, 3000, 5000];
 
+type PowerStep = Extract<SceneStep, { kind: "power" }>;
+type NonPowerStep = Exclude<SceneStep, { kind: "power" }>;
+
 export function SceneBuilderDialog({ open, onOpenChange, scene, onSaved }: Props) {
   const [name, setName] = useState("");
   const [icon, setIcon] = useState<SceneIcon>("film");
-  const [steps, setSteps] = useState<SceneStep[]>([]);
+  // Initial device states (always run first, only sends if device isn't already in desired state)
+  const [initialStates, setInitialStates] = useState<PowerStep[]>([]);
+  // Sequential steps (RF / IR / delay) run after all initial states
+  const [steps, setSteps] = useState<NonPowerStep[]>([]);
   const [rf, setRf] = useState<RfSignal[]>([]);
   const [ir, setIr] = useState<IrSignal[]>([]);
   const [tracked, setTracked] = useState<PowerState[]>([]);
@@ -58,7 +64,9 @@ export function SceneBuilderDialog({ open, onOpenChange, scene, onSaved }: Props
     if (!open) return;
     setName(scene?.name ?? "");
     setIcon(scene?.icon ?? "film");
-    setSteps(scene?.steps ?? []);
+    const all = scene?.steps ?? [];
+    setInitialStates(all.filter((s): s is PowerStep => s.kind === "power"));
+    setSteps(all.filter((s): s is NonPowerStep => s.kind !== "power"));
     (async () => {
       const [rfRes, irRes, psRes] = await Promise.all([
         supabase.from("rf_signals").select("*").order("slot"),
@@ -75,7 +83,7 @@ export function SceneBuilderDialog({ open, onOpenChange, scene, onSaved }: Props
   const learnedRf = useMemo(() => rf.filter((s) => s.learned), [rf]);
   const learnedIr = useMemo(() => ir.filter((s) => (s.code?.length ?? 0) > 0), [ir]);
 
-  const addStep = (s: SceneStep) => setSteps((cur) => [...cur, s]);
+  const addStep = (s: NonPowerStep) => setSteps((cur) => [...cur, s]);
   const removeStep = (i: number) =>
     setSteps((cur) => cur.filter((_, idx) => idx !== i));
   const moveStep = (i: number, dir: -1 | 1) =>
@@ -87,15 +95,27 @@ export function SceneBuilderDialog({ open, onOpenChange, scene, onSaved }: Props
       return next;
     });
 
+  const setInitialState = (d: PowerState, desired: boolean) =>
+    setInitialStates((cur) => {
+      const without = cur.filter((s) => s.ref !== d.ref);
+      return [...without, { kind: "power", ref: d.ref, name: d.name, desired }];
+    });
+  const clearInitialState = (ref: string) =>
+    setInitialStates((cur) => cur.filter((s) => s.ref !== ref));
+  const initialFor = (ref: string): boolean | null =>
+    initialStates.find((s) => s.ref === ref)?.desired ?? null;
+
   const save = async () => {
     if (!name.trim()) return;
-    if (steps.length === 0) {
-      toast.error("Add at least one step");
+    if (initialStates.length === 0 && steps.length === 0) {
+      toast.error("Add at least one initial state or step");
       return;
     }
     setSaving(true);
     try {
-      const payload = { name: name.trim(), icon, steps };
+      // Initial states first, then sequential steps. Runner already executes in order.
+      const merged: SceneStep[] = [...initialStates, ...steps];
+      const payload = { name: name.trim(), icon, steps: merged };
       const res = scene
         ? await supabase.from("scenes").update(payload).eq("id", scene.id)
         : await supabase.from("scenes").insert(payload);
@@ -152,9 +172,72 @@ export function SceneBuilderDialog({ open, onOpenChange, scene, onSaved }: Props
             </div>
           </div>
 
+          {/* ── Phase 1: initial device states ── */}
+          <div className="space-y-2 rounded-xl border border-border bg-secondary/20 p-3">
+            <div className="flex items-baseline justify-between gap-2">
+              <label className="text-xs font-medium text-foreground">
+                1. Initial device states ({initialStates.length})
+              </label>
+              <span className="text-[11px] text-muted-foreground">
+                Runs first. Only sends a toggle if the device isn't already there.
+              </span>
+            </div>
+            {tracked.length === 0 ? (
+              <p className="text-xs text-muted-foreground/70">
+                No tracked devices. Add some on the Devices page.
+              </p>
+            ) : (
+              <div className="space-y-1.5">
+                {tracked.map((d) => {
+                  const desired = initialFor(d.ref);
+                  const btn = (active: boolean, on: boolean) =>
+                    `rounded-full border px-2 py-0.5 text-[11px] transition-colors ${
+                      active
+                        ? on
+                          ? "border-primary bg-primary/20 text-primary"
+                          : "border-destructive bg-destructive/15 text-destructive"
+                        : "border-border bg-background/60 text-muted-foreground hover:text-foreground"
+                    }`;
+                  return (
+                    <div
+                      key={d.ref}
+                      className="flex items-center gap-2 rounded-lg border border-border bg-background/40 px-2.5 py-1.5"
+                    >
+                      <PowerIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                      <span className="flex-1 truncate text-xs">{d.name}</span>
+                      <button
+                        type="button"
+                        onClick={() => setInitialState(d, true)}
+                        className={btn(desired === true, true)}
+                      >
+                        ON
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setInitialState(d, false)}
+                        className={btn(desired === false, false)}
+                      >
+                        OFF
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => clearInitialState(d.ref)}
+                        disabled={desired === null}
+                        className="rounded-full border border-border bg-background/60 px-2 py-0.5 text-[11px] text-muted-foreground hover:text-foreground disabled:opacity-30"
+                      >
+                        Skip
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* ── Phase 2: sequential steps ── */}
           <div className="space-y-2">
-            <label className="text-xs font-medium text-muted-foreground">
-              Steps ({steps.length})
+            <label className="text-xs font-medium text-foreground">
+              2. Sequential steps ({steps.length})
             </label>
             {steps.length === 0 ? (
               <div className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
@@ -168,17 +251,13 @@ export function SceneBuilderDialog({ open, onOpenChange, scene, onSaved }: Props
                       ? rfIconFor(rf.find((r) => r.slot === s.slot)?.icon ?? "power")
                       : s.kind === "ir"
                         ? irIconFor(ir.find((r) => r.id === s.signal_id)?.icon ?? "power")
-                        : s.kind === "power"
-                          ? PowerIcon
-                          : Timer;
+                        : Timer;
                   const label =
                     s.kind === "delay"
                       ? `Wait ${s.ms} ms`
                       : s.kind === "rf"
                         ? `RF · ${s.label}`
-                        : s.kind === "ir"
-                          ? `IR · ${s.label}`
-                          : `${s.name} → ${s.desired ? "ON" : "OFF"}`;
+                        : `IR · ${s.label}`;
 
                   return (
                     <li
@@ -224,7 +303,7 @@ export function SceneBuilderDialog({ open, onOpenChange, scene, onSaved }: Props
           </div>
 
           <div className="space-y-3 rounded-xl border border-border bg-secondary/20 p-3">
-            <p className="text-xs font-medium text-muted-foreground">Add a step</p>
+            <p className="text-xs font-medium text-muted-foreground">Add a sequential step</p>
 
             <div>
               <div className="mb-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -284,56 +363,7 @@ export function SceneBuilderDialog({ open, onOpenChange, scene, onSaved }: Props
               )}
             </div>
 
-            <div>
-              <div className="mb-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
-                <PowerIcon className="h-3.5 w-3.5" /> Turn on/off (tracked devices)
-              </div>
-              {tracked.length === 0 ? (
-                <p className="text-xs text-muted-foreground/70">
-                  No tracked devices. Add some on the Devices page.
-                </p>
-              ) : (
-                <div className="space-y-1.5">
-                  {tracked.map((d) => (
-                    <div
-                      key={d.ref}
-                      className="flex items-center gap-2 rounded-lg border border-border bg-background/40 px-2.5 py-1.5"
-                    >
-                      <PowerIcon className="h-3.5 w-3.5 text-muted-foreground" />
-                      <span className="flex-1 truncate text-xs">{d.name}</span>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          addStep({
-                            kind: "power",
-                            ref: d.ref,
-                            name: d.name,
-                            desired: true,
-                          })
-                        }
-                        className="rounded-full border border-border bg-background/60 px-2 py-0.5 text-[11px] hover:border-primary hover:text-primary"
-                      >
-                        Turn ON
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          addStep({
-                            kind: "power",
-                            ref: d.ref,
-                            name: d.name,
-                            desired: false,
-                          })
-                        }
-                        className="rounded-full border border-border bg-background/60 px-2 py-0.5 text-[11px] hover:border-primary hover:text-primary"
-                      >
-                        Turn OFF
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+
 
             <div>
               <div className="mb-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
