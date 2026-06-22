@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Plus, RefreshCw, Trash2, Move, Check } from "lucide-react";
+import { Plus, RefreshCw, Trash2, Move, Check, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 
 /* Default marker positions (feet, room-centered) when a control hasn't been
