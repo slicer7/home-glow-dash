@@ -156,8 +156,35 @@ export function IrControlGrid() {
     const pulsed = pulsedId === sig.id;
     const empty = !sig.code || sig.code.length === 0;
     const isPower = sig.icon === "power";
+    const isDragging = dragId === sig.id;
+    const isOver = dragOverId === sig.id && dragId && dragId !== sig.id;
     return (
-      <div key={sig.id} className="group relative flex flex-col items-center gap-1.5">
+      <div
+        key={sig.id}
+        draggable
+        onDragStart={(e) => {
+          setDragId(sig.id);
+          e.dataTransfer.effectAllowed = "move";
+        }}
+        onDragEnter={() => setDragOverId(sig.id)}
+        onDragOver={(e) => {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = "move";
+        }}
+        onDrop={(e) => {
+          e.preventDefault();
+          if (dragId && dragId !== sig.id) reorder(sig.device, dragId, sig.id);
+          setDragId(null);
+          setDragOverId(null);
+        }}
+        onDragEnd={() => {
+          setDragId(null);
+          setDragOverId(null);
+        }}
+        className={`group relative flex cursor-grab flex-col items-center gap-1.5 rounded-xl p-1 transition-all active:cursor-grabbing ${
+          isDragging ? "opacity-40" : ""
+        } ${isOver ? "scale-110 bg-primary/10 ring-1 ring-primary" : ""}`}
+      >
         <button
           type="button"
           disabled={empty}
