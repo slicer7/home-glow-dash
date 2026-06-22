@@ -600,7 +600,7 @@ export function CustomRemote() {
         </div>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[1fr_280px]">
+      <div className={editing ? "grid gap-4 lg:grid-cols-[1fr_280px]" : "flex justify-center"}>
         {/* Canvas */}
         <div
           className="relative mx-auto w-full overflow-hidden rounded-[2rem] border border-zinc-800 bg-gradient-to-b from-zinc-900 via-zinc-950 to-black p-4 shadow-2xl"
