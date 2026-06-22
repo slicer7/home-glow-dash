@@ -110,8 +110,26 @@ export function RfRemoteGrid() {
       command: "rf_send",
       params: { slot: sig.slot },
     });
-    if (error) toast.error("Send failed", { description: error.message });
+    if (error) {
+      toast.error("Send failed", { description: error.message });
+      return;
+    }
+    // Every RF button is a candidate power device — flip if tracked.
+    const ref = `rf:${sig.slot}`;
+    const { data } = await supabase
+      .from("power_states")
+      .select("is_on")
+      .eq("ref", ref)
+      .maybeSingle();
+    const current = (data as { is_on: boolean } | null)?.is_on;
+    if (typeof current === "boolean") {
+      await supabase
+        .from("power_states")
+        .update({ is_on: !current, updated_at: new Date().toISOString() })
+        .eq("ref", ref);
+    }
   };
+
 
   const remove = async (sig: RfSignal) => {
     const { error } = await supabase.from("rf_signals").delete().eq("slot", sig.slot);
