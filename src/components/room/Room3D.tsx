@@ -607,6 +607,7 @@ export function Room3D({
   editing,
   onSend,
   onEdit,
+  onHide,
   onMove,
 }: {
   controls: RoomControl[];
