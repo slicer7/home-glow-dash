@@ -50,6 +50,8 @@ export const IR_ICONS: { key: IrIcon; label: string; icon: LucideIcon }[] = [
   { key: "channel-down", label: "Ch −", icon: ArrowDownCircle },
   { key: "chevron-up", label: "Up", icon: ChevronUp },
   { key: "chevron-down", label: "Down", icon: ChevronDown },
+  { key: "chevron-left", label: "Left", icon: ChevronLeft },
+  { key: "chevron-right", label: "Right", icon: ChevronRight },
   { key: "play", label: "Play", icon: Play },
   { key: "pause", label: "Pause", icon: Pause },
   { key: "stop", label: "Stop", icon: Square },
