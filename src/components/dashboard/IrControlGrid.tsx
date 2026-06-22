@@ -31,16 +31,43 @@ export function IrControlGrid() {
   const [addOpen, setAddOpen] = useState(false);
   const [addDevice, setAddDevice] = useState<IrDevice>("tv");
   const [learn, setLearn] = useState<LearnTarget | null>(null);
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [dragOverId, setDragOverId] = useState<string | null>(null);
 
   const [edit, setEdit] = useState<IrSignal | null>(null);
   const [editLabel, setEditLabel] = useState("");
   const [editIcon, setEditIcon] = useState<IrIcon>("power");
+
+  const reorder = async (device: IrDevice, sourceId: string, targetId: string) => {
+    const list = signals.filter((s) => s.device === device);
+    const from = list.findIndex((s) => s.id === sourceId);
+    const to = list.findIndex((s) => s.id === targetId);
+    if (from === -1 || to === -1 || from === to) return;
+    const next = [...list];
+    const [moved] = next.splice(from, 1);
+    next.splice(to, 0, moved);
+    setSignals((prev) => {
+      const others = prev.filter((s) => s.device !== device);
+      return [...others, ...next.map((s, i) => ({ ...s, pos_x: i }))];
+    });
+    const updates = await Promise.all(
+      next.map((s, i) =>
+        supabase.from("ir_signals").update({ pos_x: i }).eq("id", s.id),
+      ),
+    );
+    const failed = updates.find((u) => u.error);
+    if (failed?.error) {
+      toast.error("Couldn’t save order", { description: failed.error.message });
+      refresh();
+    }
+  };
 
   const refresh = async () => {
     const { data, error } = await supabase
       .from("ir_signals")
       .select("*")
       .order("device", { ascending: true })
+      .order("pos_x", { ascending: true, nullsFirst: false })
       .order("created_at", { ascending: true });
     if (error) {
       toast.error("Couldn’t load IR buttons", { description: error.message });
@@ -129,8 +156,35 @@ export function IrControlGrid() {
     const pulsed = pulsedId === sig.id;
     const empty = !sig.code || sig.code.length === 0;
     const isPower = sig.icon === "power";
+    const isDragging = dragId === sig.id;
+    const isOver = dragOverId === sig.id && dragId && dragId !== sig.id;
     return (
-      <div key={sig.id} className="group relative flex flex-col items-center gap-1.5">
+      <div
+        key={sig.id}
+        draggable
+        onDragStart={(e) => {
+          setDragId(sig.id);
+          e.dataTransfer.effectAllowed = "move";
+        }}
+        onDragEnter={() => setDragOverId(sig.id)}
+        onDragOver={(e) => {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = "move";
+        }}
+        onDrop={(e) => {
+          e.preventDefault();
+          if (dragId && dragId !== sig.id) reorder(sig.device, dragId, sig.id);
+          setDragId(null);
+          setDragOverId(null);
+        }}
+        onDragEnd={() => {
+          setDragId(null);
+          setDragOverId(null);
+        }}
+        className={`group relative flex cursor-grab flex-col items-center gap-1.5 rounded-xl p-1 transition-all active:cursor-grabbing ${
+          isDragging ? "opacity-40" : ""
+        } ${isOver ? "scale-110 bg-primary/10 ring-1 ring-primary" : ""}`}
+      >
         <button
           type="button"
           disabled={empty}
