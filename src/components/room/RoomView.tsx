@@ -187,7 +187,7 @@ export function RoomView() {
     setHiddenKeys((prev) => {
       const next = new Set(prev);
       next.add(c.key);
-      localStorage.setItem("room_hidden_keys", JSON.stringify([...next]));
+      saveSetting<string[]>(HIDDEN_KEYS_SETTING, [...next]);
       return next;
     });
     toast.success("Hidden from room", { description: c.label });
@@ -195,7 +195,7 @@ export function RoomView() {
 
   const showAllHidden = () => {
     setHiddenKeys(new Set());
-    localStorage.removeItem("room_hidden_keys");
+    saveSetting<string[]>(HIDDEN_KEYS_SETTING, []);
     toast.success("All controls visible");
   };
 
