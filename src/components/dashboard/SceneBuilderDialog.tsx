@@ -1,11 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   supabase,
+  powerRefFromIr,
+  powerRefFromRf,
   type RfSignal,
   type IrSignal,
   type Scene,
   type SceneIcon,
   type SceneStep,
+  type PowerState,
 } from "@/lib/supabase";
 import {
   Dialog,
@@ -20,8 +23,18 @@ import { Button } from "@/components/ui/button";
 import { SCENE_ICONS } from "./sceneIcons";
 import { iconFor as rfIconFor } from "./rfIcons";
 import { irIconFor } from "./irIcons";
-import { Radio, Tv, Timer, X, ArrowUp, ArrowDown, Plus } from "lucide-react";
+import {
+  Radio,
+  Tv,
+  Timer,
+  X,
+  ArrowUp,
+  ArrowDown,
+  Plus,
+  Power as PowerIcon,
+} from "lucide-react";
 import { toast } from "sonner";
+
 
 type Props = {
   open: boolean;
