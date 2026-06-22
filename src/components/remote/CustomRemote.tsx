@@ -196,6 +196,7 @@ export function CustomRemote() {
   >(null);
 
   const canvasRef = useRef<HTMLDivElement | null>(null);
+  const wrapRef = useRef<HTMLDivElement | null>(null);
   const dragRef = useRef<{
     kind: "button" | "text";
     id: string;
@@ -203,6 +204,27 @@ export function CustomRemote() {
     offsetY: number;
     pointerId: number;
   } | null>(null);
+
+  /* Responsive cell size — fits the canvas to the available width on mobile. */
+  const [GRID, setGRID] = useState<number>(MAX_GRID);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const compute = () => {
+      const el = wrapRef.current;
+      // 32px of horizontal padding on the canvas frame.
+      const avail = (el?.clientWidth ?? window.innerWidth) - 32;
+      const cell = Math.max(MIN_GRID, Math.min(MAX_GRID, Math.floor(avail / COLS)));
+      setGRID(cell);
+    };
+    compute();
+    const ro = new ResizeObserver(compute);
+    if (wrapRef.current) ro.observe(wrapRef.current);
+    window.addEventListener("resize", compute);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", compute);
+    };
+  }, []);
 
   /* ---------- data fetch ---------- */
   const refresh = async () => {
