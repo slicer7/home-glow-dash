@@ -102,7 +102,41 @@ export type Alarm = {
 export type SceneStep =
   | { kind: "rf"; slot: number; label: string }
   | { kind: "ir"; signal_id: string; label: string }
-  | { kind: "delay"; ms: number };
+  | { kind: "delay"; ms: number }
+  | { kind: "power"; ref: string; name: string; desired: boolean };
+
+/* ── Power states — tracked on/off state for devices ── */
+
+export type PowerState = {
+  ref: string; // "ir:<id>" or "rf:<slot>"
+  name: string;
+  is_on: boolean;
+  updated_at: string;
+};
+
+export function powerRefFromIr(signalId: string): string {
+  return `ir:${signalId}`;
+}
+export function powerRefFromRf(slot: number): string {
+  return `rf:${slot}`;
+}
+
+export async function sendPowerToggle(ref: string) {
+  if (ref.startsWith("rf:")) {
+    const slot = Number(ref.slice(3));
+    return supabase.from("commands").insert({
+      target_device: "p4_hub",
+      command: "rf_send",
+      params: { slot },
+    });
+  }
+  const signal_id = ref.slice(3);
+  return supabase.from("commands").insert({
+    target_device: "clock",
+    command: "ir_send",
+    params: { signal_id },
+  });
+}
 
 export type SceneIcon =
   | "film"
