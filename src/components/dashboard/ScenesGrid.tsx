@@ -16,7 +16,7 @@ async function runStep(step: SceneStep): Promise<void> {
   if (step.kind === "delay") {
     return new Promise((r) => setTimeout(r, step.ms));
   }
-  const insert =
+  const insert: { target_device: string; command: string; params: Record<string, unknown> } =
     step.kind === "rf"
       ? { target_device: "p4_hub", command: "rf_send", params: { slot: step.slot } }
       : { target_device: "clock", command: "ir_send", params: { signal_id: step.signal_id } };
