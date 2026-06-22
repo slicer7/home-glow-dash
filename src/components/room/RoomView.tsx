@@ -26,6 +26,14 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Plus, RefreshCw, Trash2, Move, Check, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
+import {
+  fetchSetting,
+  readLocal,
+  saveSetting,
+  subscribeSetting,
+} from "@/lib/cloudSettings";
+
+const HIDDEN_KEYS_SETTING = "room_hidden_keys_v1";
 
 /* Default marker positions (feet, room-centered) when a control hasn't been
  * placed yet — see Room3D for the coordinate frame. */
@@ -56,15 +64,25 @@ export function RoomView() {
   const [editLabel, setEditLabel] = useState("");
   const [editIcon, setEditIcon] = useState<RfIcon>("lightbulb");
 
-  /* Hidden controls in the 3D room — persisted to localStorage. */
-  const [hiddenKeys, setHiddenKeys] = useState<Set<string>>(() => {
-    try {
-      const raw = localStorage.getItem("room_hidden_keys");
-      return new Set(raw ? JSON.parse(raw) : []);
-    } catch {
-      return new Set<string>();
-    }
-  });
+  /* Hidden controls in the 3D room — synced via app_settings across devices. */
+  const [hiddenKeys, setHiddenKeys] = useState<Set<string>>(
+    () => new Set(readLocal<string[]>(HIDDEN_KEYS_SETTING, [])),
+  );
+
+  useEffect(() => {
+    let alive = true;
+    fetchSetting<string[]>(HIDDEN_KEYS_SETTING).then((arr) => {
+      if (!alive || !arr) return;
+      setHiddenKeys(new Set(arr));
+    });
+    const unsub = subscribeSetting<string[]>(HIDDEN_KEYS_SETTING, (arr) => {
+      setHiddenKeys(new Set(arr ?? []));
+    });
+    return () => {
+      alive = false;
+      unsub();
+    };
+  }, []);
 
   useEffect(() => setMounted(true), []);
 
@@ -169,7 +187,7 @@ export function RoomView() {
     setHiddenKeys((prev) => {
       const next = new Set(prev);
       next.add(c.key);
-      localStorage.setItem("room_hidden_keys", JSON.stringify([...next]));
+      saveSetting<string[]>(HIDDEN_KEYS_SETTING, [...next]);
       return next;
     });
     toast.success("Hidden from room", { description: c.label });
@@ -177,7 +195,7 @@ export function RoomView() {
 
   const showAllHidden = () => {
     setHiddenKeys(new Set());
-    localStorage.removeItem("room_hidden_keys");
+    saveSetting<string[]>(HIDDEN_KEYS_SETTING, []);
     toast.success("All controls visible");
   };
 

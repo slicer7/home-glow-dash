@@ -31,6 +31,12 @@ import {
   RotateCcw,
 } from "lucide-react";
 import { toast } from "sonner";
+import {
+  fetchSetting,
+  readLocal,
+  saveSetting,
+  subscribeSetting,
+} from "@/lib/cloudSettings";
 
 /* ------------------------------------------------------------------ */
 /*  Layout / persistence                                              */
@@ -39,7 +45,7 @@ import { toast } from "sonner";
 const GRID = 56; // px per cell
 const COLS = 12;
 const MIN_ROWS = 14;
-const STORAGE_KEY = "custom_remote_layout_v1";
+const SETTINGS_KEY = "custom_remote_layout_v1";
 
 type ColorKey =
   | "graphite"
@@ -146,23 +152,17 @@ const FONT_SIZE_CLASS: Record<TextBox["fontSize"], string> = {
   xl: "text-2xl",
 };
 
-function loadLayout(): Layout {
-  if (typeof window === "undefined") return { buttons: {}, texts: [] };
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { buttons: {}, texts: [] };
-    const parsed = JSON.parse(raw) as Layout;
-    return {
-      buttons: parsed.buttons ?? {},
-      texts: parsed.texts ?? [],
-    };
-  } catch {
-    return { buttons: {}, texts: [] };
-  }
+function loadLayoutLocal(): Layout {
+  const parsed = readLocal<Layout | null>(SETTINGS_KEY, null);
+  if (!parsed) return { buttons: {}, texts: [] };
+  return {
+    buttons: parsed.buttons ?? {},
+    texts: parsed.texts ?? [],
+  };
 }
 
-function saveLayout(l: Layout) {
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(l));
+function persistLayout(l: Layout) {
+  saveSetting<Layout>(SETTINGS_KEY, l);
 }
 
 /* ------------------------------------------------------------------ */
@@ -181,7 +181,7 @@ type RemoteItem = {
 export function CustomRemote() {
   const [irSignals, setIrSignals] = useState<IrSignal[]>([]);
   const [rfSignals, setRfSignals] = useState<RfSignal[]>([]);
-  const [layout, setLayout] = useState<Layout>(() => loadLayout());
+  const [layout, setLayout] = useState<Layout>(() => loadLayoutLocal());
   const [editing, setEditing] = useState(false);
   const [selectedRef, setSelectedRef] = useState<string | null>(null);
   const [selectedText, setSelectedText] = useState<string | null>(null);
@@ -230,6 +230,28 @@ export function CustomRemote() {
       .subscribe();
     return () => {
       supabase.removeChannel(ch);
+    };
+  }, []);
+
+  /* ---------- cloud-synced layout ---------- */
+  useEffect(() => {
+    let alive = true;
+    fetchSetting<Layout>(SETTINGS_KEY).then((cloud) => {
+      if (!alive || !cloud) return;
+      setLayout({
+        buttons: cloud.buttons ?? {},
+        texts: cloud.texts ?? [],
+      });
+    });
+    const unsub = subscribeSetting<Layout>(SETTINGS_KEY, (next) => {
+      setLayout({
+        buttons: next.buttons ?? {},
+        texts: next.texts ?? [],
+      });
+    });
+    return () => {
+      alive = false;
+      unsub();
     };
   }, []);
 
@@ -287,7 +309,7 @@ export function CustomRemote() {
     if (changed) {
       const merged = { ...layout, buttons: next };
       setLayout(merged);
-      saveLayout(merged);
+      persistLayout(merged);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [items.length]);
@@ -295,7 +317,7 @@ export function CustomRemote() {
   const updateLayout = (mut: (l: Layout) => Layout) => {
     setLayout((prev) => {
       const next = mut(prev);
-      saveLayout(next);
+      persistLayout(next);
       return next;
     });
   };
@@ -507,7 +529,7 @@ export function CustomRemote() {
   const resetLayout = () => {
     if (!confirm("Reset the remote layout? Custom positions, sizes, colors and text boxes will be cleared."))
       return;
-    saveLayout({ buttons: {}, texts: [] });
+    persistLayout({ buttons: {}, texts: [] });
     setLayout({ buttons: {}, texts: [] });
     setSelectedRef(null);
     setSelectedText(null);
