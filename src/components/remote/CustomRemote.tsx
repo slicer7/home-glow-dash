@@ -152,23 +152,17 @@ const FONT_SIZE_CLASS: Record<TextBox["fontSize"], string> = {
   xl: "text-2xl",
 };
 
-function loadLayout(): Layout {
-  if (typeof window === "undefined") return { buttons: {}, texts: [] };
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { buttons: {}, texts: [] };
-    const parsed = JSON.parse(raw) as Layout;
-    return {
-      buttons: parsed.buttons ?? {},
-      texts: parsed.texts ?? [],
-    };
-  } catch {
-    return { buttons: {}, texts: [] };
-  }
+function loadLayoutLocal(): Layout {
+  const parsed = readLocal<Layout | null>(SETTINGS_KEY, null);
+  if (!parsed) return { buttons: {}, texts: [] };
+  return {
+    buttons: parsed.buttons ?? {},
+    texts: parsed.texts ?? [],
+  };
 }
 
-function saveLayout(l: Layout) {
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(l));
+function persistLayout(l: Layout) {
+  saveSetting<Layout>(SETTINGS_KEY, l);
 }
 
 /* ------------------------------------------------------------------ */
