@@ -31,13 +31,6 @@ export function Header({ connected }: { connected: boolean }) {
           Remotes
         </Link>
         <Link
-          to="/scenes"
-          className="rounded-full px-3 py-1 text-muted-foreground transition-colors hover:text-foreground"
-          activeProps={{ className: "rounded-full px-3 py-1 bg-primary/15 text-primary" }}
-        >
-          Scenes
-        </Link>
-        <Link
           to="/devices"
           className="rounded-full px-3 py-1 text-muted-foreground transition-colors hover:text-foreground"
           activeProps={{ className: "rounded-full px-3 py-1 bg-primary/15 text-primary" }}
