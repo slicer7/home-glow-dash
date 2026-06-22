@@ -44,7 +44,7 @@ import {
 
 const MAX_GRID = 56; // px per cell (desktop)
 const MIN_GRID = 26; // px per cell (small phones)
-const COLS = 12;
+const COLS = 6;
 const MIN_ROWS = 14;
 const SETTINGS_KEY = "custom_remote_layout_v1";
 
@@ -153,13 +153,27 @@ const FONT_SIZE_CLASS: Record<TextBox["fontSize"], string> = {
   xl: "text-2xl",
 };
 
+function clampLayout(l: Layout): Layout {
+  const buttons: Record<string, ButtonLayout> = {};
+  Object.entries(l.buttons ?? {}).forEach(([k, b]) => {
+    buttons[k] = {
+      ...b,
+      x: Math.min(b.x, COLS - b.size),
+      y: b.y,
+    };
+  });
+  const texts = (l.texts ?? []).map((t) => ({
+    ...t,
+    x: Math.min(t.x, COLS - t.w),
+    y: t.y,
+  }));
+  return { buttons, texts };
+}
+
 function loadLayoutLocal(): Layout {
   const parsed = readLocal<Layout | null>(SETTINGS_KEY, null);
   if (!parsed) return { buttons: {}, texts: [] };
-  return {
-    buttons: parsed.buttons ?? {},
-    texts: parsed.texts ?? [],
-  };
+  return clampLayout(parsed);
 }
 
 function persistLayout(l: Layout) {
@@ -261,16 +275,10 @@ export function CustomRemote() {
     let alive = true;
     fetchSetting<Layout>(SETTINGS_KEY).then((cloud) => {
       if (!alive || !cloud) return;
-      setLayout({
-        buttons: cloud.buttons ?? {},
-        texts: cloud.texts ?? [],
-      });
+      setLayout(clampLayout(cloud));
     });
     const unsub = subscribeSetting<Layout>(SETTINGS_KEY, (next) => {
-      setLayout({
-        buttons: next.buttons ?? {},
-        texts: next.texts ?? [],
-      });
+      setLayout(clampLayout(next));
     });
     return () => {
       alive = false;
