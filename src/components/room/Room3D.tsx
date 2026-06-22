@@ -614,6 +614,7 @@ export function Room3D({
   editing: boolean;
   onSend: (c: RoomControl) => void;
   onEdit: (c: RoomControl) => void;
+  onHide?: (c: RoomControl) => void;
   onMove: (c: RoomControl, pos: [number, number, number]) => void;
 }) {
   const [draggingKey, setDraggingKey] = useState<string | null>(null);
