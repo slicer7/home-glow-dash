@@ -73,3 +73,33 @@ export type Alarm = {
   created_at: string;
 };
 
+/* ── Scenes — sequential macros of RF/IR sends with delays ── */
+
+export type SceneStep =
+  | { kind: "rf"; slot: number; label: string }
+  | { kind: "ir"; signal_id: string; label: string }
+  | { kind: "delay"; ms: number };
+
+export type SceneIcon =
+  | "film"
+  | "moon"
+  | "sun"
+  | "sunrise"
+  | "sunset"
+  | "coffee"
+  | "bed"
+  | "music"
+  | "gamepad"
+  | "sparkles"
+  | "power"
+  | "play";
+
+export type Scene = {
+  id: string;
+  name: string;
+  icon: SceneIcon;
+  steps: SceneStep[];
+  created_at: string;
+};
+
+
