@@ -514,6 +514,22 @@ function Marker({
           </button>
         </Html>
       )}
+
+      {/* hide from room — rendered as its own Html so it stays clickable */}
+      {editing && onHide && (
+        <Html position={[-0.55, 0.55, 0]} center distanceFactor={9} zIndexRange={[30, 0]}>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onHide(control);
+            }}
+            title="Hide from room"
+            className="rounded-full bg-destructive/90 p-1.5 text-white shadow hover:bg-destructive"
+          >
+            <EyeOff className="h-3.5 w-3.5" />
+          </button>
+        </Html>
+      )}
     </group>
   );
 }
