@@ -240,6 +240,16 @@ export function RoomView() {
             {editing ? <Check className="h-4 w-4" /> : <Move className="h-4 w-4" />}
             {editing ? "Done" : "Edit layout"}
           </Button>
+          {hiddenKeys.size > 0 && (
+            <Button
+              variant="outline"
+              onClick={showAllHidden}
+              className="pointer-events-auto gap-1.5 shadow-lg"
+            >
+              <Eye className="h-4 w-4" />
+              Show hidden ({hiddenKeys.size})
+            </Button>
+          )}
           <Button onClick={() => setAddOpen(true)} className="pointer-events-auto gap-1.5 shadow-lg">
             <Plus className="h-4 w-4" />
             Add device
