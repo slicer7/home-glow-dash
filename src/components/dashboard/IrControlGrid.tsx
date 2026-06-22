@@ -31,10 +31,36 @@ export function IrControlGrid() {
   const [addOpen, setAddOpen] = useState(false);
   const [addDevice, setAddDevice] = useState<IrDevice>("tv");
   const [learn, setLearn] = useState<LearnTarget | null>(null);
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [dragOverId, setDragOverId] = useState<string | null>(null);
 
   const [edit, setEdit] = useState<IrSignal | null>(null);
   const [editLabel, setEditLabel] = useState("");
   const [editIcon, setEditIcon] = useState<IrIcon>("power");
+
+  const reorder = async (device: IrDevice, sourceId: string, targetId: string) => {
+    const list = signals.filter((s) => s.device === device);
+    const from = list.findIndex((s) => s.id === sourceId);
+    const to = list.findIndex((s) => s.id === targetId);
+    if (from === -1 || to === -1 || from === to) return;
+    const next = [...list];
+    const [moved] = next.splice(from, 1);
+    next.splice(to, 0, moved);
+    setSignals((prev) => {
+      const others = prev.filter((s) => s.device !== device);
+      return [...others, ...next.map((s, i) => ({ ...s, pos_x: i }))];
+    });
+    const updates = await Promise.all(
+      next.map((s, i) =>
+        supabase.from("ir_signals").update({ pos_x: i }).eq("id", s.id),
+      ),
+    );
+    const failed = updates.find((u) => u.error);
+    if (failed?.error) {
+      toast.error("Couldn’t save order", { description: failed.error.message });
+      refresh();
+    }
+  };
 
   const refresh = async () => {
     const { data, error } = await supabase
