@@ -153,13 +153,27 @@ const FONT_SIZE_CLASS: Record<TextBox["fontSize"], string> = {
   xl: "text-2xl",
 };
 
+function clampLayout(l: Layout): Layout {
+  const buttons: Record<string, ButtonLayout> = {};
+  Object.entries(l.buttons ?? {}).forEach(([k, b]) => {
+    buttons[k] = {
+      ...b,
+      x: Math.min(b.x, COLS - b.size),
+      y: b.y,
+    };
+  });
+  const texts = (l.texts ?? []).map((t) => ({
+    ...t,
+    x: Math.min(t.x, COLS - t.w),
+    y: t.y,
+  }));
+  return { buttons, texts };
+}
+
 function loadLayoutLocal(): Layout {
   const parsed = readLocal<Layout | null>(SETTINGS_KEY, null);
   if (!parsed) return { buttons: {}, texts: [] };
-  return {
-    buttons: parsed.buttons ?? {},
-    texts: parsed.texts ?? [],
-  };
+  return clampLayout(parsed);
 }
 
 function persistLayout(l: Layout) {
