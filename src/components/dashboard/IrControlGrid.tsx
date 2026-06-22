@@ -41,6 +41,7 @@ export function IrControlGrid() {
       .from("ir_signals")
       .select("*")
       .order("device", { ascending: true })
+      .order("pos_x", { ascending: true, nullsFirst: false })
       .order("created_at", { ascending: true });
     if (error) {
       toast.error("Couldn’t load IR buttons", { description: error.message });
