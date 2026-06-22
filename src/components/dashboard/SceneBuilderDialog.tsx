@@ -286,6 +286,57 @@ export function SceneBuilderDialog({ open, onOpenChange, scene, onSaved }: Props
 
             <div>
               <div className="mb-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+                <PowerIcon className="h-3.5 w-3.5" /> Turn on/off (tracked devices)
+              </div>
+              {tracked.length === 0 ? (
+                <p className="text-xs text-muted-foreground/70">
+                  No tracked devices. Add some on the Devices page.
+                </p>
+              ) : (
+                <div className="space-y-1.5">
+                  {tracked.map((d) => (
+                    <div
+                      key={d.ref}
+                      className="flex items-center gap-2 rounded-lg border border-border bg-background/40 px-2.5 py-1.5"
+                    >
+                      <PowerIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                      <span className="flex-1 truncate text-xs">{d.name}</span>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          addStep({
+                            kind: "power",
+                            ref: d.ref,
+                            name: d.name,
+                            desired: true,
+                          })
+                        }
+                        className="rounded-full border border-border bg-background/60 px-2 py-0.5 text-[11px] hover:border-primary hover:text-primary"
+                      >
+                        Turn ON
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          addStep({
+                            kind: "power",
+                            ref: d.ref,
+                            name: d.name,
+                            desired: false,
+                          })
+                        }
+                        className="rounded-full border border-border bg-background/60 px-2 py-0.5 text-[11px] hover:border-primary hover:text-primary"
+                      >
+                        Turn OFF
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div>
+              <div className="mb-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
                 <Timer className="h-3.5 w-3.5" /> Delay
               </div>
               <div className="flex flex-wrap gap-1.5">
@@ -303,6 +354,7 @@ export function SceneBuilderDialog({ open, onOpenChange, scene, onSaved }: Props
               </div>
             </div>
           </div>
+
         </div>
 
         <DialogFooter>
