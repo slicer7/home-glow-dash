@@ -453,6 +453,7 @@ function Marker({
   selected: boolean;
   onSend: (c: RoomControl) => void;
   onEdit?: (c: RoomControl) => void;
+  onHide?: (c: RoomControl) => void;
   onStartDrag: (c: RoomControl) => void;
 }) {
   const Icon = control.kind === "rf" ? iconFor(control.iconKey) : irIconFor(control.iconKey);
