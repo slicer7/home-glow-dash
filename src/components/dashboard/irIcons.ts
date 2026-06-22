@@ -22,6 +22,8 @@ import {
   Droplet,
   ChevronUp,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   ArrowUpCircle,
   ArrowDownCircle,
   Cable,
