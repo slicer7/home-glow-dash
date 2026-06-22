@@ -270,6 +270,7 @@ export function RoomView() {
             editing={editing}
             onSend={send}
             onEdit={openEdit}
+            onHide={handleHide}
             onMove={move}
           />
         </Suspense>
