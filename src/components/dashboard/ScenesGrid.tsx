@@ -4,8 +4,8 @@ import {
   sendPowerToggle,
   type Scene,
   type SceneStep,
-  type PowerState,
 } from "@/lib/supabase";
+
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
