@@ -648,8 +648,9 @@ export function CustomRemote() {
       <div className={editing ? "grid gap-4 lg:grid-cols-[1fr_280px]" : "flex justify-center"}>
         {/* Canvas */}
         <div
+          ref={wrapRef}
           className="relative mx-auto w-full overflow-hidden rounded-[2rem] border border-zinc-800 bg-gradient-to-b from-zinc-900 via-zinc-950 to-black p-4 shadow-2xl"
-          style={{ maxWidth: COLS * GRID + 32 }}
+          style={{ maxWidth: COLS * MAX_GRID + 32 }}
         >
           {/* Brushed metal highlight */}
           <div className="pointer-events-none absolute inset-0 rounded-[2rem] bg-gradient-to-b from-white/[0.04] to-transparent" />
