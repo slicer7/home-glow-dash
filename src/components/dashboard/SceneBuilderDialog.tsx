@@ -164,13 +164,18 @@ export function SceneBuilderDialog({ open, onOpenChange, scene, onSaved }: Props
                       ? rfIconFor(rf.find((r) => r.slot === s.slot)?.icon ?? "power")
                       : s.kind === "ir"
                         ? irIconFor(ir.find((r) => r.id === s.signal_id)?.icon ?? "power")
-                        : Timer;
+                        : s.kind === "power"
+                          ? PowerIcon
+                          : Timer;
                   const label =
                     s.kind === "delay"
                       ? `Wait ${s.ms} ms`
                       : s.kind === "rf"
                         ? `RF · ${s.label}`
-                        : `IR · ${s.label}`;
+                        : s.kind === "ir"
+                          ? `IR · ${s.label}`
+                          : `${s.name} → ${s.desired ? "ON" : "OFF"}`;
+
                   return (
                     <li
                       key={i}
