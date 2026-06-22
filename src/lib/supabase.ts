@@ -40,15 +40,37 @@ export type IrIcon =
   | "volume-x"
   | "play"
   | "pause"
+  | "stop"
+  | "record"
+  | "rewind"
+  | "fast-forward"
   | "skip-forward"
   | "skip-back"
   | "tv"
   | "speaker"
   | "snowflake"
   | "sun"
+  | "moon"
   | "fan"
+  | "wind"
+  | "thermometer"
+  | "droplet"
   | "chevron-up"
-  | "chevron-down";
+  | "chevron-down"
+  | "channel-up"
+  | "channel-down"
+  | "input"
+  | "menu"
+  | "home"
+  | "back"
+  | "info"
+  | "guide"
+  | "settings"
+  | "mic"
+  | "lightbulb"
+  | "zap"
+  | "hash";
+
 
 export type IrSignal = {
   id: string;
