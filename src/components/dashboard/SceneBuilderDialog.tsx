@@ -45,10 +45,16 @@ type Props = {
 
 const DELAY_PRESETS = [500, 1000, 2000, 3000, 5000];
 
+type PowerStep = Extract<SceneStep, { kind: "power" }>;
+type NonPowerStep = Exclude<SceneStep, { kind: "power" }>;
+
 export function SceneBuilderDialog({ open, onOpenChange, scene, onSaved }: Props) {
   const [name, setName] = useState("");
   const [icon, setIcon] = useState<SceneIcon>("film");
-  const [steps, setSteps] = useState<SceneStep[]>([]);
+  // Initial device states (always run first, only sends if device isn't already in desired state)
+  const [initialStates, setInitialStates] = useState<PowerStep[]>([]);
+  // Sequential steps (RF / IR / delay) run after all initial states
+  const [steps, setSteps] = useState<NonPowerStep[]>([]);
   const [rf, setRf] = useState<RfSignal[]>([]);
   const [ir, setIr] = useState<IrSignal[]>([]);
   const [tracked, setTracked] = useState<PowerState[]>([]);
@@ -58,7 +64,9 @@ export function SceneBuilderDialog({ open, onOpenChange, scene, onSaved }: Props
     if (!open) return;
     setName(scene?.name ?? "");
     setIcon(scene?.icon ?? "film");
-    setSteps(scene?.steps ?? []);
+    const all = scene?.steps ?? [];
+    setInitialStates(all.filter((s): s is PowerStep => s.kind === "power"));
+    setSteps(all.filter((s): s is NonPowerStep => s.kind !== "power"));
     (async () => {
       const [rfRes, irRes, psRes] = await Promise.all([
         supabase.from("rf_signals").select("*").order("slot"),
@@ -75,7 +83,7 @@ export function SceneBuilderDialog({ open, onOpenChange, scene, onSaved }: Props
   const learnedRf = useMemo(() => rf.filter((s) => s.learned), [rf]);
   const learnedIr = useMemo(() => ir.filter((s) => (s.code?.length ?? 0) > 0), [ir]);
 
-  const addStep = (s: SceneStep) => setSteps((cur) => [...cur, s]);
+  const addStep = (s: NonPowerStep) => setSteps((cur) => [...cur, s]);
   const removeStep = (i: number) =>
     setSteps((cur) => cur.filter((_, idx) => idx !== i));
   const moveStep = (i: number, dir: -1 | 1) =>
@@ -87,15 +95,27 @@ export function SceneBuilderDialog({ open, onOpenChange, scene, onSaved }: Props
       return next;
     });
 
+  const setInitialState = (d: PowerState, desired: boolean) =>
+    setInitialStates((cur) => {
+      const without = cur.filter((s) => s.ref !== d.ref);
+      return [...without, { kind: "power", ref: d.ref, name: d.name, desired }];
+    });
+  const clearInitialState = (ref: string) =>
+    setInitialStates((cur) => cur.filter((s) => s.ref !== ref));
+  const initialFor = (ref: string): boolean | null =>
+    initialStates.find((s) => s.ref === ref)?.desired ?? null;
+
   const save = async () => {
     if (!name.trim()) return;
-    if (steps.length === 0) {
-      toast.error("Add at least one step");
+    if (initialStates.length === 0 && steps.length === 0) {
+      toast.error("Add at least one initial state or step");
       return;
     }
     setSaving(true);
     try {
-      const payload = { name: name.trim(), icon, steps };
+      // Initial states first, then sequential steps. Runner already executes in order.
+      const merged: SceneStep[] = [...initialStates, ...steps];
+      const payload = { name: name.trim(), icon, steps: merged };
       const res = scene
         ? await supabase.from("scenes").update(payload).eq("id", scene.id)
         : await supabase.from("scenes").insert(payload);
