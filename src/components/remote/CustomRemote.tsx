@@ -31,6 +31,12 @@ import {
   RotateCcw,
 } from "lucide-react";
 import { toast } from "sonner";
+import {
+  fetchSetting,
+  readLocal,
+  saveSetting,
+  subscribeSetting,
+} from "@/lib/cloudSettings";
 
 /* ------------------------------------------------------------------ */
 /*  Layout / persistence                                              */
@@ -39,7 +45,7 @@ import { toast } from "sonner";
 const GRID = 56; // px per cell
 const COLS = 12;
 const MIN_ROWS = 14;
-const STORAGE_KEY = "custom_remote_layout_v1";
+const SETTINGS_KEY = "custom_remote_layout_v1";
 
 type ColorKey =
   | "graphite"
