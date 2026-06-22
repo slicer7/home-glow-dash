@@ -57,6 +57,8 @@ export type IrIcon =
   | "droplet"
   | "chevron-up"
   | "chevron-down"
+  | "chevron-left"
+  | "chevron-right"
   | "channel-up"
   | "channel-down"
   | "input"
