@@ -41,6 +41,8 @@ import {
 } from "@/lib/cloudSettings";
 
 const HIDDEN_KEYS_SETTING = "room_hidden_keys_v1";
+const PC_POS_SETTING = "room_pc_power_pos_v1";
+const PC_DEFAULT_POS: [number, number, number] = [1.2, 2.2, -3.6]; // on the PC tower
 
 /* Default marker positions (feet, room-centered) when a control hasn't been
  * placed yet — see Room3D for the coordinate frame. */
