@@ -33,7 +33,8 @@ function Dashboard() {
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       <Header connected={connected} />
-      <main className="flex-1">
+      <main className="flex-1 space-y-5 p-5 lg:p-8">
+        <PcPowerCard />
         <RoomView />
       </main>
     </div>
