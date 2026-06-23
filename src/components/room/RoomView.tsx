@@ -77,6 +77,10 @@ export function RoomView() {
   const [hiddenKeys, setHiddenKeys] = useState<Set<string>>(
     () => new Set(readLocal<string[]>(HIDDEN_KEYS_SETTING, [])),
   );
+  /* PC power marker position — synced across devices. */
+  const [pcPos, setPcPos] = useState<[number, number, number]>(
+    () => readLocal<[number, number, number]>(PC_POS_SETTING, PC_DEFAULT_POS),
+  );
 
   useEffect(() => {
     let alive = true;
@@ -84,12 +88,20 @@ export function RoomView() {
       if (!alive || !arr) return;
       setHiddenKeys(new Set(arr));
     });
+    fetchSetting<[number, number, number]>(PC_POS_SETTING).then((p) => {
+      if (!alive || !p) return;
+      setPcPos(p);
+    });
     const unsub = subscribeSetting<string[]>(HIDDEN_KEYS_SETTING, (arr) => {
       setHiddenKeys(new Set(arr ?? []));
+    });
+    const unsubPc = subscribeSetting<[number, number, number]>(PC_POS_SETTING, (p) => {
+      if (p) setPcPos(p);
     });
     return () => {
       alive = false;
       unsub();
+      unsubPc();
     };
   }, []);
 
