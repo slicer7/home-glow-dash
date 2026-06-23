@@ -196,7 +196,7 @@ export function RoomView() {
   };
 
   const move = async (c: RoomControl, pos: [number, number, number]) => {
-    const [x, y, z] = pos.map((n) => Math.round(n * 1000) / 1000);
+    const [x, y, z] = pos.map((n) => Math.round(n * 1000) / 1000) as [number, number, number];
     if (c.kind === "rf") {
       const slot = Number(c.key.slice(3));
       const { error } = await supabase
@@ -204,13 +204,16 @@ export function RoomView() {
         .update({ pos_x: x, pos_y: y, pos_z: z })
         .eq("slot", slot);
       if (error) toast.error("Couldn’t save position", { description: error.message });
-    } else {
+    } else if (c.kind === "ir") {
       const id = c.key.slice(3);
       const { error } = await supabase
         .from("ir_signals")
         .update({ pos_x: x, pos_y: y, pos_z: z })
         .eq("id", id);
       if (error) toast.error("Couldn’t save position", { description: error.message });
+    } else {
+      setPcPos([x, y, z]);
+      saveSetting<[number, number, number]>(PC_POS_SETTING, [x, y, z]);
     }
   };
 
