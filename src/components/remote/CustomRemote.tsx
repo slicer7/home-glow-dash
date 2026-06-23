@@ -189,8 +189,9 @@ type RemoteItem = {
   label: string;
   iconKey: string;
   isPower: boolean;
-  kind: "ir" | "rf";
-  signal: IrSignal | RfSignal;
+  kind: "ir" | "rf" | "pc";
+  signal: IrSignal | RfSignal | null;
+  pcCommand?: "press" | "force_off";
 };
 
 export function CustomRemote() {
