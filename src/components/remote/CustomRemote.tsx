@@ -835,7 +835,9 @@ export function CustomRemote() {
                   <div className="text-[11px] text-zinc-500">
                     {selectedItem.kind === "ir"
                       ? "IR · clock"
-                      : `RF · slot ${(selectedItem.signal as RfSignal).slot}`}
+                      : selectedItem.kind === "pc"
+                        ? "PC · power"
+                        : `RF · slot ${(selectedItem.signal as RfSignal).slot}`}
                   </div>
                 </div>
 
