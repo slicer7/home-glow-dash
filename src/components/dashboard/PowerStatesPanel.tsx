@@ -167,7 +167,7 @@ export function PowerStatesPanel() {
                   <div className="min-w-0">
                     <p className="truncate text-sm font-semibold">{s.name}</p>
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                      {s.ref.startsWith("rf:") ? "RF" : "IR"} · {s.ref}
+                      {s.ref.startsWith("rf:") ? "RF" : s.ref.startsWith("pc:") ? "PC" : "IR"} · {s.ref}
                     </p>
                   </div>
                 </div>
