@@ -166,10 +166,12 @@ export function RoomView() {
 
   const send = async (c: RoomControl) => {
     toast.success("Sent ✓", { description: c.label });
-    const insert: { target_device: string; command: string; params: Record<string, unknown> } =
+    const insert: { target_device: string; command: string; params?: Record<string, unknown> } =
       c.kind === "rf"
         ? { target_device: "p4_hub", command: "rf_send", params: { slot: Number(c.key.slice(3)) } }
-        : { target_device: "clock", command: "ir_send", params: { signal_id: c.key.slice(3) } };
+        : c.kind === "ir"
+          ? { target_device: "clock", command: "ir_send", params: { signal_id: c.key.slice(3) } }
+          : { target_device: "pc_power", command: "press" };
     const { error } = await supabase.from("commands").insert(insert);
     if (error) {
       toast.error("Send failed", { description: error.message });
