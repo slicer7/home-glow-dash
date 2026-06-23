@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { Header } from "@/components/dashboard/Header";
+import { PcPowerCard } from "@/components/dashboard/PcPowerCard";
 import { RoomView } from "@/components/room/RoomView";
 
 export const Route = createFileRoute("/")({
