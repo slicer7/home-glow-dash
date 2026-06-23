@@ -30,9 +30,9 @@ function Dashboard() {
   }, []);
 
   return (
-    <div className="flex min-h-screen flex-col bg-background text-foreground">
+    <div className="flex h-screen flex-col overflow-hidden bg-background text-foreground">
       <Header connected={connected} />
-      <main className="relative flex-1 min-h-[calc(100vh-65px)]">
+      <main className="relative min-h-0 flex-1 overflow-hidden">
         <RoomView />
       </main>
     </div>
