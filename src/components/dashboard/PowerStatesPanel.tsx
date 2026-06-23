@@ -264,6 +264,9 @@ function TrackDeviceDialog({
 
   const options = useMemo(() => {
     const list: { ref: string; label: string }[] = [];
+    if (!takenRefs.has("pc:power")) {
+      list.push({ ref: "pc:power", label: "PC · Power button" });
+    }
     for (const s of irPowers) {
       const r = powerRefFromIr(s.id);
       if (!takenRefs.has(r))
