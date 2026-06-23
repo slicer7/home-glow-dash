@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { Header } from "@/components/dashboard/Header";
+import { PcPowerCard } from "@/components/dashboard/PcPowerCard";
 import { RoomView } from "@/components/room/RoomView";
 
 export const Route = createFileRoute("/")({
@@ -32,7 +33,10 @@ function Dashboard() {
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       <Header connected={connected} />
-      <main className="flex-1">
+      <main className="relative flex-1">
+        <div className="absolute left-5 top-5 z-20 lg:left-8 lg:top-8">
+          <PcPowerCard />
+        </div>
         <RoomView />
       </main>
     </div>
