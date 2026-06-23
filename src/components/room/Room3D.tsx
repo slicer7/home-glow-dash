@@ -2,7 +2,7 @@ import { Canvas, useFrame, useThree, type ThreeEvent } from "@react-three/fiber"
 import { OrbitControls, Html, Edges } from "@react-three/drei";
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
-import { Pencil, EyeOff } from "lucide-react";
+import { Pencil, EyeOff, Power } from "lucide-react";
 import { iconFor } from "@/components/dashboard/rfIcons";
 import { irIconFor } from "@/components/dashboard/irIcons";
 
@@ -421,8 +421,8 @@ function AudioBits() {
  * ────────────────────────────────────────────────────────────────────────── */
 
 export type RoomControl = {
-  key: string; // "rf:0" | "ir:<uuid>"
-  kind: "rf" | "ir";
+  key: string; // "rf:0" | "ir:<uuid>" | "pc:power" | "pc:force_off"
+  kind: "rf" | "ir" | "pc";
   label: string;
   iconKey: string;
   learned: boolean;
@@ -456,7 +456,12 @@ function Marker({
   onHide?: (c: RoomControl) => void;
   onStartDrag: (c: RoomControl) => void;
 }) {
-  const Icon = control.kind === "rf" ? iconFor(control.iconKey) : irIconFor(control.iconKey);
+  const Icon =
+    control.kind === "rf"
+      ? iconFor(control.iconKey)
+      : control.kind === "ir"
+        ? irIconFor(control.iconKey)
+        : Power;
   return (
     <group position={pos}>
       {/* invisible hit sphere — ignored by the raycaster while another marker

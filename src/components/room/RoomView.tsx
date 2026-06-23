@@ -41,6 +41,8 @@ import {
 } from "@/lib/cloudSettings";
 
 const HIDDEN_KEYS_SETTING = "room_hidden_keys_v1";
+const PC_POS_SETTING = "room_pc_power_pos_v1";
+const PC_DEFAULT_POS: [number, number, number] = [1.2, 2.2, -3.6]; // on the PC tower
 
 /* Default marker positions (feet, room-centered) when a control hasn't been
  * placed yet — see Room3D for the coordinate frame. */
@@ -75,6 +77,10 @@ export function RoomView() {
   const [hiddenKeys, setHiddenKeys] = useState<Set<string>>(
     () => new Set(readLocal<string[]>(HIDDEN_KEYS_SETTING, [])),
   );
+  /* PC power marker position — synced across devices. */
+  const [pcPos, setPcPos] = useState<[number, number, number]>(
+    () => readLocal<[number, number, number]>(PC_POS_SETTING, PC_DEFAULT_POS),
+  );
 
   useEffect(() => {
     let alive = true;
@@ -82,12 +88,20 @@ export function RoomView() {
       if (!alive || !arr) return;
       setHiddenKeys(new Set(arr));
     });
+    fetchSetting<[number, number, number]>(PC_POS_SETTING).then((p) => {
+      if (!alive || !p) return;
+      setPcPos(p);
+    });
     const unsub = subscribeSetting<string[]>(HIDDEN_KEYS_SETTING, (arr) => {
       setHiddenKeys(new Set(arr ?? []));
+    });
+    const unsubPc = subscribeSetting<[number, number, number]>(PC_POS_SETTING, (p) => {
+      if (p) setPcPos(p);
     });
     return () => {
       alive = false;
       unsub();
+      unsubPc();
     };
   }, []);
 
@@ -139,15 +153,25 @@ export function RoomView() {
         pos: hasPos(s) ? [s.pos_x!, s.pos_y!, s.pos_z!] : irDefault(s.device, i),
       };
     });
-    return [...rfControls, ...irControls].filter((c) => !hiddenKeys.has(c.key));
-  }, [rf, ir, hiddenKeys]);
+    const pcControl: RoomControl = {
+      key: "pc:power",
+      kind: "pc",
+      label: "PC Power",
+      iconKey: "power",
+      learned: true,
+      pos: pcPos,
+    };
+    return [...rfControls, ...irControls, pcControl].filter((c) => !hiddenKeys.has(c.key));
+  }, [rf, ir, hiddenKeys, pcPos]);
 
   const send = async (c: RoomControl) => {
     toast.success("Sent ✓", { description: c.label });
-    const insert: { target_device: string; command: string; params: Record<string, unknown> } =
+    const insert: { target_device: string; command: string; params?: Record<string, unknown> } =
       c.kind === "rf"
         ? { target_device: "p4_hub", command: "rf_send", params: { slot: Number(c.key.slice(3)) } }
-        : { target_device: "clock", command: "ir_send", params: { signal_id: c.key.slice(3) } };
+        : c.kind === "ir"
+          ? { target_device: "clock", command: "ir_send", params: { signal_id: c.key.slice(3) } }
+          : { target_device: "pc_power", command: "press" };
     const { error } = await supabase.from("commands").insert(insert);
     if (error) {
       toast.error("Send failed", { description: error.message });
@@ -172,7 +196,7 @@ export function RoomView() {
   };
 
   const move = async (c: RoomControl, pos: [number, number, number]) => {
-    const [x, y, z] = pos.map((n) => Math.round(n * 1000) / 1000);
+    const [x, y, z] = pos.map((n) => Math.round(n * 1000) / 1000) as [number, number, number];
     if (c.kind === "rf") {
       const slot = Number(c.key.slice(3));
       const { error } = await supabase
@@ -180,13 +204,16 @@ export function RoomView() {
         .update({ pos_x: x, pos_y: y, pos_z: z })
         .eq("slot", slot);
       if (error) toast.error("Couldn’t save position", { description: error.message });
-    } else {
+    } else if (c.kind === "ir") {
       const id = c.key.slice(3);
       const { error } = await supabase
         .from("ir_signals")
         .update({ pos_x: x, pos_y: y, pos_z: z })
         .eq("id", id);
       if (error) toast.error("Couldn’t save position", { description: error.message });
+    } else {
+      setPcPos([x, y, z]);
+      saveSetting<[number, number, number]>(PC_POS_SETTING, [x, y, z]);
     }
   };
 
