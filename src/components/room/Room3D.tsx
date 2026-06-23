@@ -707,7 +707,7 @@ export function Room3D({
   };
 
   return (
-    <Canvas camera={{ position: [12, 9.5, 14], fov: 50 }} dpr={[1, 2]}>
+    <Canvas className="h-full w-full" camera={{ position: [12, 9.5, 14], fov: 50 }} dpr={[1, 2]}>
       <color attach="background" args={["#0f172a"]} />
       <ambientLight intensity={0.65} />
       <directionalLight position={[8, 12, 6]} intensity={0.8} />
