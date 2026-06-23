@@ -750,12 +750,12 @@ export function CustomRemote() {
               const color = COLORS[b.color] ?? COLORS.graphite;
               const px = b.size * GRID - 12;
               const pulsed = pulsedRef === it.ref;
-              const isLearned =
-                it.kind === "rf" ? (it.signal as RfSignal).learned : true;
               const empty =
-                it.kind === "ir"
-                  ? !(it.signal as IrSignal).code?.length
-                  : !isLearned;
+                it.kind === "pc"
+                  ? false
+                  : it.kind === "ir"
+                    ? !(it.signal as IrSignal).code?.length
+                    : !(it.signal as RfSignal).learned;
               const sel = selectedRef === it.ref;
               return (
                 <div
