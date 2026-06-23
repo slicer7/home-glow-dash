@@ -305,7 +305,27 @@ export function CustomRemote() {
       kind: "rf",
       signal: s,
     }));
-    return [...rf, ...ir];
+    const pc: RemoteItem[] = [
+      {
+        ref: "pc:press",
+        label: "PC Power",
+        iconKey: "power",
+        isPower: true,
+        kind: "pc",
+        signal: null,
+        pcCommand: "press",
+      },
+      {
+        ref: "pc:force_off",
+        label: "Force Off",
+        iconKey: "zap",
+        isPower: true,
+        kind: "pc",
+        signal: null,
+        pcCommand: "force_off",
+      },
+    ];
+    return [...rf, ...ir, ...pc];
   }, [irSignals, rfSignals]);
 
   // Auto-place buttons that don't yet have a layout entry.
