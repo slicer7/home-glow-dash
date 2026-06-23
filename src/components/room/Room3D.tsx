@@ -421,8 +421,8 @@ function AudioBits() {
  * ────────────────────────────────────────────────────────────────────────── */
 
 export type RoomControl = {
-  key: string; // "rf:0" | "ir:<uuid>"
-  kind: "rf" | "ir";
+  key: string; // "rf:0" | "ir:<uuid>" | "pc:power" | "pc:force_off"
+  kind: "rf" | "ir" | "pc";
   label: string;
   iconKey: string;
   learned: boolean;
