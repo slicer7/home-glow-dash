@@ -153,8 +153,16 @@ export function RoomView() {
         pos: hasPos(s) ? [s.pos_x!, s.pos_y!, s.pos_z!] : irDefault(s.device, i),
       };
     });
-    return [...rfControls, ...irControls].filter((c) => !hiddenKeys.has(c.key));
-  }, [rf, ir, hiddenKeys]);
+    const pcControl: RoomControl = {
+      key: "pc:power",
+      kind: "pc",
+      label: "PC Power",
+      iconKey: "power",
+      learned: true,
+      pos: pcPos,
+    };
+    return [...rfControls, ...irControls, pcControl].filter((c) => !hiddenKeys.has(c.key));
+  }, [rf, ir, hiddenKeys, pcPos]);
 
   const send = async (c: RoomControl) => {
     toast.success("Sent ✓", { description: c.label });
