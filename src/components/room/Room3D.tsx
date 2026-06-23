@@ -456,7 +456,12 @@ function Marker({
   onHide?: (c: RoomControl) => void;
   onStartDrag: (c: RoomControl) => void;
 }) {
-  const Icon = control.kind === "rf" ? iconFor(control.iconKey) : irIconFor(control.iconKey);
+  const Icon =
+    control.kind === "rf"
+      ? iconFor(control.iconKey)
+      : control.kind === "ir"
+        ? irIconFor(control.iconKey)
+        : Power;
   return (
     <group position={pos}>
       {/* invisible hit sphere — ignored by the raycaster while another marker
