@@ -24,7 +24,14 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Plus, RefreshCw, Trash2, Move, Check, Eye, EyeOff } from "lucide-react";
+import { Plus, RefreshCw, Trash2, Move, Check, Eye, EyeOff, Power, ZapOff } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import {
   fetchSetting,
@@ -268,6 +275,41 @@ export function RoomView() {
               Show hidden ({hiddenKeys.size})
             </Button>
           )}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button className="pointer-events-auto gap-1.5 shadow-lg">
+                <Power className="h-4 w-4" />
+                PC Power
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                onClick={async () => {
+                  const { error } = await supabase
+                    .from("commands")
+                    .insert({ target_device: "pc_power", command: "press" });
+                  if (error) toast.error("PC power failed", { description: error.message });
+                  else toast.success("PC power sent");
+                }}
+              >
+                <Power className="mr-2 h-4 w-4" /> Power
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="text-destructive focus:text-destructive"
+                onClick={async () => {
+                  if (!confirm("Force the PC off?")) return;
+                  const { error } = await supabase
+                    .from("commands")
+                    .insert({ target_device: "pc_power", command: "force_off" });
+                  if (error) toast.error("Force off failed", { description: error.message });
+                  else toast.success("Force off sent");
+                }}
+              >
+                <ZapOff className="mr-2 h-4 w-4" /> Force Off
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button onClick={() => setAddOpen(true)} className="pointer-events-auto gap-1.5 shadow-lg">
             <Plus className="h-4 w-4" />
             Add device

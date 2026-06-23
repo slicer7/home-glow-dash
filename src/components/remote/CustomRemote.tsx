@@ -189,8 +189,9 @@ type RemoteItem = {
   label: string;
   iconKey: string;
   isPower: boolean;
-  kind: "ir" | "rf";
-  signal: IrSignal | RfSignal;
+  kind: "ir" | "rf" | "pc";
+  signal: IrSignal | RfSignal | null;
+  pcCommand?: "press" | "force_off";
 };
 
 export function CustomRemote() {
@@ -304,7 +305,27 @@ export function CustomRemote() {
       kind: "rf",
       signal: s,
     }));
-    return [...rf, ...ir];
+    const pc: RemoteItem[] = [
+      {
+        ref: "pc:press",
+        label: "PC Power",
+        iconKey: "power",
+        isPower: true,
+        kind: "pc",
+        signal: null,
+        pcCommand: "press",
+      },
+      {
+        ref: "pc:force_off",
+        label: "Force Off",
+        iconKey: "zap",
+        isPower: true,
+        kind: "pc",
+        signal: null,
+        pcCommand: "force_off",
+      },
+    ];
+    return [...rf, ...ir, ...pc];
   }, [irSignals, rfSignals]);
 
   // Auto-place buttons that don't yet have a layout entry.
@@ -376,6 +397,15 @@ export function CustomRemote() {
     setPulsedRef(it.ref);
     setTimeout(() => setPulsedRef((r) => (r === it.ref ? null : r)), 700);
     toast.success("Sent ✓", { description: it.label });
+    if (it.kind === "pc") {
+      if (it.pcCommand === "force_off" && !confirm("Force the PC off?")) return;
+      const { error } = await supabase.from("commands").insert({
+        target_device: "pc_power",
+        command: it.pcCommand ?? "press",
+      });
+      if (error) return toast.error("Send failed", { description: error.message });
+      return;
+    }
     if (it.kind === "rf") {
       const slot = (it.signal as RfSignal).slot;
       const { error } = await supabase.from("commands").insert({
@@ -720,12 +750,12 @@ export function CustomRemote() {
               const color = COLORS[b.color] ?? COLORS.graphite;
               const px = b.size * GRID - 12;
               const pulsed = pulsedRef === it.ref;
-              const isLearned =
-                it.kind === "rf" ? (it.signal as RfSignal).learned : true;
               const empty =
-                it.kind === "ir"
-                  ? !(it.signal as IrSignal).code?.length
-                  : !isLearned;
+                it.kind === "pc"
+                  ? false
+                  : it.kind === "ir"
+                    ? !(it.signal as IrSignal).code?.length
+                    : !(it.signal as RfSignal).learned;
               const sel = selectedRef === it.ref;
               return (
                 <div
@@ -805,7 +835,9 @@ export function CustomRemote() {
                   <div className="text-[11px] text-zinc-500">
                     {selectedItem.kind === "ir"
                       ? "IR · clock"
-                      : `RF · slot ${(selectedItem.signal as RfSignal).slot}`}
+                      : selectedItem.kind === "pc"
+                        ? "PC · power"
+                        : `RF · slot ${(selectedItem.signal as RfSignal).slot}`}
                   </div>
                 </div>
 

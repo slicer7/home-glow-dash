@@ -130,6 +130,12 @@ export async function sendPowerToggle(ref: string) {
       params: { slot },
     });
   }
+  if (ref.startsWith("pc:")) {
+    return supabase.from("commands").insert({
+      target_device: "pc_power",
+      command: "press",
+    });
+  }
   const signal_id = ref.slice(3);
   return supabase.from("commands").insert({
     target_device: "clock",
