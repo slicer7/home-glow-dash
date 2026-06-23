@@ -242,7 +242,7 @@ export function RoomView() {
   };
 
   return (
-    <div className="relative h-full w-full overflow-hidden">
+    <div className="relative h-[calc(100vh-65px)] w-full overflow-hidden">
       <div className="pointer-events-none absolute inset-x-0 top-4 z-10 flex items-start justify-between px-4">
         <div className="pointer-events-auto rounded-full border border-border bg-card/80 px-4 py-1.5 text-xs text-muted-foreground backdrop-blur">
           {editing
