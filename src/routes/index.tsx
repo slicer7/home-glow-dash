@@ -33,11 +33,13 @@ function Dashboard() {
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       <Header connected={connected} />
-      <main className="relative flex flex-1 flex-col">
-        <div className="absolute left-5 top-5 z-20 lg:left-8 lg:top-8">
+      <main className="flex flex-1 flex-col">
+        <div className="shrink-0 p-5 pb-0 lg:p-8 lg:pb-0">
           <PcPowerCard />
         </div>
-        <RoomView />
+        <div className="min-h-0 flex-1 p-5 pt-0 lg:p-8 lg:pt-0">
+          <RoomView />
+        </div>
       </main>
     </div>
   );
