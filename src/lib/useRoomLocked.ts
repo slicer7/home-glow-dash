@@ -27,7 +27,7 @@ export function useRoomState() {
     };
     load();
     const ch = supabase
-      .channel("room_state_changes")
+      .channel(`room_state_changes_${Math.random().toString(36).slice(2)}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "room_state" },
