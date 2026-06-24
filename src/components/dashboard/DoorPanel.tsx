@@ -654,7 +654,7 @@ function CodesSection({
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
             <DialogTitle>Edit keypad code</DialogTitle>
-            <DialogDescription>Change the code’s name, level, or scene.</DialogDescription>
+            <DialogDescription>Change the code’s name, level, scene, or PIN.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-1.5">
@@ -666,6 +666,32 @@ function CodesSection({
                 onChange={(e) => setEditName(e.target.value)}
                 autoFocus
               />
+            </div>
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="edit-code-secret">4-digit PIN</Label>
+                {locked && (
+                  <span className="text-[11px] text-destructive">Room is locked</span>
+                )}
+              </div>
+              <Input
+                id="edit-code-secret"
+                inputMode="numeric"
+                pattern="\d{4}"
+                maxLength={4}
+                placeholder="••••"
+                value={editSecret}
+                disabled={locked}
+                onChange={(e) =>
+                  setEditSecret(e.target.value.replace(/\D/g, "").slice(0, 4))
+                }
+                className="font-mono tracking-[0.5em]"
+              />
+              <p className="text-[11px] text-muted-foreground">
+                {locked
+                  ? "Unlock the room to change the PIN."
+                  : "Leave blank to keep the current PIN."}
+              </p>
             </div>
             <LevelSelect value={editLevel} onChange={setEditLevel} />
             <SceneSelect scenes={scenes} value={editSceneId} onChange={setEditSceneId} />
