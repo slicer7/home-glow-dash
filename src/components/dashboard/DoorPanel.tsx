@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   supabase,
   type AccessCredential,
@@ -141,12 +141,24 @@ function TagsSection({
   const [level, setLevel] = useState<AccessLevel>("guest");
   const [sceneId, setSceneId] = useState<string>(NONE);
   const [enrolling, setEnrolling] = useState(false);
+  /* tag ids that already existed when enrollment started — a new one appearing
+   * means the hub just programmed + stored the tag. */
+  const knownIdsRef = useRef<Set<string>>(new Set());
+
+  const closeAndReset = () => {
+    setOpen(false);
+    setEnrolling(false);
+    setName("");
+    setLevel("guest");
+    setSceneId(NONE);
+  };
 
   const submit = async () => {
     if (!name.trim()) {
       toast.error("Name required");
       return;
     }
+    knownIdsRef.current = new Set(creds.map((c) => c.id));
     setEnrolling(true);
     const { error } = await supabase.from("commands").insert({
       target_device: "door_hub",
@@ -167,13 +179,38 @@ function TagsSection({
     });
   };
 
-  const closeAndReset = () => {
-    setOpen(false);
-    setEnrolling(false);
-    setName("");
-    setLevel("guest");
-    setSceneId(NONE);
-  };
+  /* While enrolling, poll the table directly (don't rely on realtime) so the
+   * dialog closes as soon as the hub creates the new tag row. */
+  useEffect(() => {
+    if (!enrolling) return;
+    let active = true;
+    const startedAt = Date.now();
+    const timer = setInterval(async () => {
+      const { data } = await supabase
+        .from("access_credentials")
+        .select("id")
+        .eq("type", "tag");
+      if (!active) return;
+      const fresh = ((data ?? []) as { id: string }[]).find(
+        (r) => !knownIdsRef.current.has(r.id),
+      );
+      if (fresh) {
+        toast.success("Tag enrolled ✓", { description: "Saved to the door hub." });
+        onRefresh();
+        closeAndReset();
+      } else if (Date.now() - startedAt > 45000) {
+        toast.error("No tag detected", {
+          description: "Hold the tag to the reader and try again.",
+        });
+        setEnrolling(false);
+      }
+    }, 1500);
+    return () => {
+      active = false;
+      clearInterval(timer);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [enrolling]);
 
   const toggle = async (c: AccessCredential) => {
     const { error } = await supabase
