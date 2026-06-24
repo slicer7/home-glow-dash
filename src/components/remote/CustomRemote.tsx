@@ -782,7 +782,8 @@ export function CustomRemote() {
                 >
                   <button
                     type="button"
-                    disabled={!editing && empty}
+                    disabled={!editing && (empty || pcBlocked)}
+                    title={pcBlocked ? "Room locked — PC power is blocked" : undefined}
                     onClick={(e) => {
                       e.stopPropagation();
                       send(it);
@@ -790,7 +791,7 @@ export function CustomRemote() {
                     aria-label={it.label}
                     className={`relative flex h-full w-full items-center justify-center rounded-full bg-gradient-to-b ${color.face} text-zinc-50 ring-1 ${color.ring} transition-all ${
                       pulsed ? "scale-95 brightness-150" : "active:scale-95"
-                    } ${empty ? "opacity-40" : ""} ${
+                    } ${empty || pcBlocked ? "opacity-40" : ""} ${
                       sel && editing ? "outline outline-2 outline-offset-2 outline-primary" : ""
                     }`}
                     style={{
