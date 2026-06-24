@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { Header } from "@/components/dashboard/Header";
 import { DoorPanel } from "@/components/dashboard/DoorPanel";
+import { RoomLockCard } from "@/components/dashboard/RoomLockCard";
 
 export const Route = createFileRoute("/door")({
   head: () => ({
@@ -33,6 +34,7 @@ function DoorPage() {
             NFC tags, keypad codes, and quick-action buttons on the door hub.
           </p>
         </div>
+        <RoomLockCard />
         <DoorPanel />
       </main>
     </div>

@@ -32,6 +32,7 @@ import {
   RotateCcw,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useRoomState } from "@/lib/useRoomLocked";
 import {
   fetchSetting,
   readLocal,
@@ -203,6 +204,7 @@ export function CustomRemote() {
   const [selectedRef, setSelectedRef] = useState<string | null>(null);
   const [selectedText, setSelectedText] = useState<string | null>(null);
   const [pulsedRef, setPulsedRef] = useState<string | null>(null);
+  const { locked: roomLocked } = useRoomState();
 
   const [addRfOpen, setAddRfOpen] = useState(false);
   const [addIrOpen, setAddIrOpen] = useState(false);
@@ -397,9 +399,13 @@ export function CustomRemote() {
     }
     setPulsedRef(it.ref);
     setTimeout(() => setPulsedRef((r) => (r === it.ref ? null : r)), 700);
-    toast.success("Sent ✓", { description: it.label });
     if (it.kind === "pc") {
+      if (roomLocked) {
+        toast.error("Room locked — PC power is blocked");
+        return;
+      }
       if (it.pcCommand === "force_off" && !confirm("Force the PC off?")) return;
+      toast.success("Sent ✓", { description: it.label });
       const { error } = await supabase.from("commands").insert({
         target_device: "pc_power",
         command: it.pcCommand ?? "press",
@@ -407,6 +413,7 @@ export function CustomRemote() {
       if (error) return toast.error("Send failed", { description: error.message });
       return;
     }
+    toast.success("Sent ✓", { description: it.label });
     if (it.kind === "rf") {
       const slot = (it.signal as RfSignal).slot;
       const { error } = await supabase.from("commands").insert({
@@ -758,6 +765,7 @@ export function CustomRemote() {
                     ? !(it.signal as IrSignal).code?.length
                     : !(it.signal as RfSignal).learned;
               const sel = selectedRef === it.ref;
+              const pcBlocked = it.kind === "pc" && roomLocked;
               return (
                 <div
                   key={it.ref}
@@ -774,7 +782,8 @@ export function CustomRemote() {
                 >
                   <button
                     type="button"
-                    disabled={!editing && empty}
+                    disabled={!editing && (empty || pcBlocked)}
+                    title={pcBlocked ? "Room locked — PC power is blocked" : undefined}
                     onClick={(e) => {
                       e.stopPropagation();
                       send(it);
@@ -782,7 +791,7 @@ export function CustomRemote() {
                     aria-label={it.label}
                     className={`relative flex h-full w-full items-center justify-center rounded-full bg-gradient-to-b ${color.face} text-zinc-50 ring-1 ${color.ring} transition-all ${
                       pulsed ? "scale-95 brightness-150" : "active:scale-95"
-                    } ${empty ? "opacity-40" : ""} ${
+                    } ${empty || pcBlocked ? "opacity-40" : ""} ${
                       sel && editing ? "outline outline-2 outline-offset-2 outline-primary" : ""
                     }`}
                     style={{
