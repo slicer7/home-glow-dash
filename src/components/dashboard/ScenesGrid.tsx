@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import {
   supabase,
   sendPowerToggle,
+  irTarget,
   type Scene,
   type SceneStep,
+  type IrDevice,
 } from "@/lib/supabase";
 
 import { Button } from "@/components/ui/button";
