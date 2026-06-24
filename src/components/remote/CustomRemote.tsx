@@ -204,6 +204,7 @@ export function CustomRemote() {
   const [selectedRef, setSelectedRef] = useState<string | null>(null);
   const [selectedText, setSelectedText] = useState<string | null>(null);
   const [pulsedRef, setPulsedRef] = useState<string | null>(null);
+  const { locked: roomLocked } = useRoomState();
 
   const [addRfOpen, setAddRfOpen] = useState(false);
   const [addIrOpen, setAddIrOpen] = useState(false);
