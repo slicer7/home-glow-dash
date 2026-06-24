@@ -476,7 +476,7 @@ function CodesSection({
       level: editLevel,
       scene_id: editSceneId === NONE ? null : editSceneId,
     };
-    if (editSecret !== "" && / ^\d{4}$/.test(editSecret)) {
+    if (editSecret !== "" && /^\d{4}$/.test(editSecret)) {
       update.secret = editSecret;
     }
     const { error } = await supabase
