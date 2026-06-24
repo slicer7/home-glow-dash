@@ -399,9 +399,13 @@ export function CustomRemote() {
     }
     setPulsedRef(it.ref);
     setTimeout(() => setPulsedRef((r) => (r === it.ref ? null : r)), 700);
-    toast.success("Sent ✓", { description: it.label });
     if (it.kind === "pc") {
+      if (roomLocked) {
+        toast.error("Room locked — PC power is blocked");
+        return;
+      }
       if (it.pcCommand === "force_off" && !confirm("Force the PC off?")) return;
+      toast.success("Sent ✓", { description: it.label });
       const { error } = await supabase.from("commands").insert({
         target_device: "pc_power",
         command: it.pcCommand ?? "press",
@@ -409,6 +413,7 @@ export function CustomRemote() {
       if (error) return toast.error("Send failed", { description: error.message });
       return;
     }
+    toast.success("Sent ✓", { description: it.label });
     if (it.kind === "rf") {
       const slot = (it.signal as RfSignal).slot;
       const { error } = await supabase.from("commands").insert({
