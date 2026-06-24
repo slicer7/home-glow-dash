@@ -73,6 +73,7 @@ export function RoomView() {
   const [ir, setIr] = useState<IrSignal[]>([]);
   const [mounted, setMounted] = useState(false); /* gate WebGL to the client */
   const [editing, setEditing] = useState(false);
+  const { locked: roomLocked } = useRoomState();
 
   const [addOpen, setAddOpen] = useState(false);
   const [learn, setLearn] = useState<{ slot: number; label: string } | null>(null);
