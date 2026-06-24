@@ -674,6 +674,3 @@ function Empty({ text }: { text: string }) {
     </div>
   );
 }
-
-// Re-export for clarity even though unused externally; keeps tree-shaker happy.
-export { CreditCard };
