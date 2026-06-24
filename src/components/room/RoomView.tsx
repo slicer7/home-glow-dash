@@ -174,6 +174,10 @@ export function RoomView() {
   }, [rf, ir, hiddenKeys, pcPos]);
 
   const send = async (c: RoomControl) => {
+    if (c.kind === "pc" && roomLocked) {
+      toast.error("Room locked — PC power is blocked");
+      return;
+    }
     toast.success("Sent ✓", { description: c.label });
     let insert: { target_device: string; command: string; params?: Record<string, unknown> };
     if (c.kind === "rf") {
