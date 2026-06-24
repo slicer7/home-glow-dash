@@ -26,7 +26,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  CreditCard,
   KeyRound,
   LayoutGrid,
   Lock,
