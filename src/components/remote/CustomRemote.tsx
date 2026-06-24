@@ -431,7 +431,7 @@ export function CustomRemote() {
     } else {
       const sig = it.signal as IrSignal;
       const { error } = await supabase.from("commands").insert({
-        target_device: "clock",
+        target_device: irTarget(sig.device),
         command: "ir_send",
         params: { signal_id: sig.id },
       });
