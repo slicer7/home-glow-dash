@@ -42,10 +42,22 @@ async function runStep(step: SceneStep): Promise<void> {
     if (upd.error) throw new Error(upd.error.message);
     return;
   }
-  const insert: { target_device: string; command: string; params: Record<string, unknown> } =
-    step.kind === "rf"
-      ? { target_device: "p4_hub", command: "rf_send", params: { slot: step.slot } }
-      : { target_device: "clock", command: "ir_send", params: { signal_id: step.signal_id } };
+  let insert: { target_device: string; command: string; params: Record<string, unknown> };
+  if (step.kind === "rf") {
+    insert = { target_device: "p4_hub", command: "rf_send", params: { slot: step.slot } };
+  } else {
+    const { data } = await supabase
+      .from("ir_signals")
+      .select("device")
+      .eq("id", step.signal_id)
+      .maybeSingle();
+    const device = ((data as { device: IrDevice } | null)?.device ?? "tv") as IrDevice;
+    insert = {
+      target_device: irTarget(device),
+      command: "ir_send",
+      params: { signal_id: step.signal_id },
+    };
+  }
   const { error } = await supabase.from("commands").insert(insert);
   if (error) throw new Error(error.message);
 }
