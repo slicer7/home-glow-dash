@@ -437,6 +437,52 @@ function CodesSection({
   const [level, setLevel] = useState<AccessLevel>("guest");
   const [sceneId, setSceneId] = useState<string>(NONE);
 
+  /* edit state */
+  const [editOpen, setEditOpen] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editLevel, setEditLevel] = useState<AccessLevel>("guest");
+  const [editSceneId, setEditSceneId] = useState<string>(NONE);
+
+  const closeEdit = () => {
+    setEditOpen(false);
+    setEditId(null);
+    setEditName("");
+    setEditLevel("guest");
+    setEditSceneId(NONE);
+  };
+
+  const openEdit = (c: AccessCredential) => {
+    setEditId(c.id);
+    setEditName(c.name);
+    setEditLevel(c.level);
+    setEditSceneId(c.scene_id ?? NONE);
+    setEditOpen(true);
+  };
+
+  const saveEdit = async () => {
+    if (!editId) return;
+    if (!editName.trim()) {
+      toast.error("Name required");
+      return;
+    }
+    const { error } = await supabase
+      .from("access_credentials")
+      .update({
+        name: editName.trim(),
+        level: editLevel,
+        scene_id: editSceneId === NONE ? null : editSceneId,
+      })
+      .eq("id", editId);
+    if (error) {
+      toast.error("Couldn’t update code", { description: error.message });
+      return;
+    }
+    toast.success("Code updated");
+    closeEdit();
+    onRefresh();
+  };
+
   const submit = async () => {
     if (!/^\d{4}$/.test(code)) {
       toast.error("Code must be 4 digits");
@@ -533,6 +579,14 @@ function CodesSection({
               </div>
               <button
                 type="button"
+                onClick={() => openEdit(c)}
+                className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-background/60 hover:text-primary"
+                aria-label="Edit code"
+              >
+                <Pencil className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
                 onClick={() => remove(c)}
                 className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-background/60 hover:text-destructive"
                 aria-label="Delete code"
@@ -582,6 +636,36 @@ function CodesSection({
               Cancel
             </Button>
             <Button onClick={submit}>Add</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit dialog */}
+      <Dialog open={editOpen} onOpenChange={(o) => (o ? setEditOpen(true) : closeEdit())}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Edit keypad code</DialogTitle>
+            <DialogDescription>Change the code’s name, level, or scene.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="edit-code-name">Name</Label>
+              <Input
+                id="edit-code-name"
+                placeholder="Guest PIN"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                autoFocus
+              />
+            </div>
+            <LevelSelect value={editLevel} onChange={setEditLevel} />
+            <SceneSelect scenes={scenes} value={editSceneId} onChange={setEditSceneId} />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={closeEdit}>
+              Cancel
+            </Button>
+            <Button onClick={saveEdit}>Save changes</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
