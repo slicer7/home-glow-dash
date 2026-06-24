@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   supabase,
+  irTarget,
   type IrSignal,
   type RfSignal,
 } from "@/lib/supabase";
