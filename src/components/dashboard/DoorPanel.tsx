@@ -579,6 +579,14 @@ function CodesSection({
               </div>
               <button
                 type="button"
+                onClick={() => openEdit(c)}
+                className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-background/60 hover:text-primary"
+                aria-label="Edit code"
+              >
+                <Pencil className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
                 onClick={() => remove(c)}
                 className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-background/60 hover:text-destructive"
                 aria-label="Delete code"
