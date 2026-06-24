@@ -765,6 +765,7 @@ export function CustomRemote() {
                     ? !(it.signal as IrSignal).code?.length
                     : !(it.signal as RfSignal).learned;
               const sel = selectedRef === it.ref;
+              const pcBlocked = it.kind === "pc" && roomLocked;
               return (
                 <div
                   key={it.ref}
