@@ -437,6 +437,52 @@ function CodesSection({
   const [level, setLevel] = useState<AccessLevel>("guest");
   const [sceneId, setSceneId] = useState<string>(NONE);
 
+  /* edit state */
+  const [editOpen, setEditOpen] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editLevel, setEditLevel] = useState<AccessLevel>("guest");
+  const [editSceneId, setEditSceneId] = useState<string>(NONE);
+
+  const closeEdit = () => {
+    setEditOpen(false);
+    setEditId(null);
+    setEditName("");
+    setEditLevel("guest");
+    setEditSceneId(NONE);
+  };
+
+  const openEdit = (c: AccessCredential) => {
+    setEditId(c.id);
+    setEditName(c.name);
+    setEditLevel(c.level);
+    setEditSceneId(c.scene_id ?? NONE);
+    setEditOpen(true);
+  };
+
+  const saveEdit = async () => {
+    if (!editId) return;
+    if (!editName.trim()) {
+      toast.error("Name required");
+      return;
+    }
+    const { error } = await supabase
+      .from("access_credentials")
+      .update({
+        name: editName.trim(),
+        level: editLevel,
+        scene_id: editSceneId === NONE ? null : editSceneId,
+      })
+      .eq("id", editId);
+    if (error) {
+      toast.error("Couldn’t update code", { description: error.message });
+      return;
+    }
+    toast.success("Code updated");
+    closeEdit();
+    onRefresh();
+  };
+
   const submit = async () => {
     if (!/^\d{4}$/.test(code)) {
       toast.error("Code must be 4 digits");
