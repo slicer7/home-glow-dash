@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { supabase, type IrSignal, type IrDevice, type IrIcon } from "@/lib/supabase";
+import { supabase, irTarget, type IrSignal, type IrDevice, type IrIcon } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
