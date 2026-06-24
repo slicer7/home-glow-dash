@@ -34,6 +34,7 @@ function DoorPage() {
             NFC tags, keypad codes, and quick-action buttons on the door hub.
           </p>
         </div>
+        <RoomLockCard />
         <DoorPanel />
       </main>
     </div>
