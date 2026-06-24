@@ -639,6 +639,36 @@ function CodesSection({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Edit dialog */}
+      <Dialog open={editOpen} onOpenChange={(o) => (o ? setEditOpen(true) : closeEdit())}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Edit keypad code</DialogTitle>
+            <DialogDescription>Change the code’s name, level, or scene.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="edit-code-name">Name</Label>
+              <Input
+                id="edit-code-name"
+                placeholder="Guest PIN"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                autoFocus
+              />
+            </div>
+            <LevelSelect value={editLevel} onChange={setEditLevel} />
+            <SceneSelect scenes={scenes} value={editSceneId} onChange={setEditSceneId} />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={closeEdit}>
+              Cancel
+            </Button>
+            <Button onClick={saveEdit}>Save changes</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 }
