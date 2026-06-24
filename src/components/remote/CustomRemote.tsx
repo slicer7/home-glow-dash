@@ -32,6 +32,7 @@ import {
   RotateCcw,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useRoomState } from "@/lib/useRoomLocked";
 import {
   fetchSetting,
   readLocal,
