@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, lazy, Suspense } from "react";
 import {
   supabase,
+  irTarget,
   type RfSignal,
   type RfIcon,
   type IrSignal,
