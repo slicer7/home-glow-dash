@@ -35,6 +35,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { useRoomState } from "@/lib/useRoomLocked";
+import {
   fetchSetting,
   readLocal,
   saveSetting,
