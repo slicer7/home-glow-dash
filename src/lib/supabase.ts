@@ -121,6 +121,11 @@ export function powerRefFromRf(slot: number): string {
   return `rf:${slot}`;
 }
 
+/** Route an IR send to the right emitter: AC lives by the door hub, everything else on the clock. */
+export function irTarget(device: IrDevice): "door_hub" | "clock" {
+  return device === "ac" ? "door_hub" : "clock";
+}
+
 export async function sendPowerToggle(ref: string) {
   if (ref.startsWith("rf:")) {
     const slot = Number(ref.slice(3));
@@ -137,12 +142,39 @@ export async function sendPowerToggle(ref: string) {
     });
   }
   const signal_id = ref.slice(3);
+  const { data } = await supabase
+    .from("ir_signals")
+    .select("device")
+    .eq("id", signal_id)
+    .maybeSingle();
+  const device = ((data as { device: IrDevice } | null)?.device ?? "tv") as IrDevice;
   return supabase.from("commands").insert({
-    target_device: "clock",
+    target_device: irTarget(device),
     command: "ir_send",
     params: { signal_id },
   });
 }
+
+/* ── Door — NFC tags, keypad codes, and keypad scene buttons ── */
+
+export type AccessLevel = "full" | "guest";
+export type AccessType = "tag" | "code";
+
+export type AccessCredential = {
+  id: string;
+  type: AccessType;
+  secret: string;
+  name: string;
+  level: AccessLevel;
+  scene_id: string | null;
+  enabled: boolean;
+  created_at: string;
+};
+
+export type DoorKey = {
+  key: string;
+  scene_id: string | null;
+};
 
 export type SceneIcon =
   | "film"

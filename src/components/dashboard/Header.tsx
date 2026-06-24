@@ -52,6 +52,9 @@ export function Header({ connected }: { connected: boolean }) {
         <Link to="/devices" className={linkClass} activeProps={{ className: activeClass }}>
           Devices
         </Link>
+        <Link to="/door" className={linkClass} activeProps={{ className: activeClass }}>
+          Door
+        </Link>
         <Link to="/alarms" className={linkClass} activeProps={{ className: activeClass }}>
           Alarms
         </Link>
