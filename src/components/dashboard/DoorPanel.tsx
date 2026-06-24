@@ -146,12 +146,58 @@ function TagsSection({
    * means the hub just programmed + stored the tag. */
   const knownIdsRef = useRef<Set<string>>(new Set());
 
+  /* edit state */
+  const [editOpen, setEditOpen] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editLevel, setEditLevel] = useState<AccessLevel>("guest");
+  const [editSceneId, setEditSceneId] = useState<string>(NONE);
+
   const closeAndReset = () => {
     setOpen(false);
     setEnrolling(false);
     setName("");
     setLevel("guest");
     setSceneId(NONE);
+  };
+
+  const closeEdit = () => {
+    setEditOpen(false);
+    setEditId(null);
+    setEditName("");
+    setEditLevel("guest");
+    setEditSceneId(NONE);
+  };
+
+  const openEdit = (c: AccessCredential) => {
+    setEditId(c.id);
+    setEditName(c.name);
+    setEditLevel(c.level);
+    setEditSceneId(c.scene_id ?? NONE);
+    setEditOpen(true);
+  };
+
+  const saveEdit = async () => {
+    if (!editId) return;
+    if (!editName.trim()) {
+      toast.error("Name required");
+      return;
+    }
+    const { error } = await supabase
+      .from("access_credentials")
+      .update({
+        name: editName.trim(),
+        level: editLevel,
+        scene_id: editSceneId === NONE ? null : editSceneId,
+      })
+      .eq("id", editId);
+    if (error) {
+      toast.error("Couldn’t update tag", { description: error.message });
+      return;
+    }
+    toast.success("Tag updated");
+    closeEdit();
+    onRefresh();
   };
 
   const submit = async () => {
@@ -276,6 +322,14 @@ function TagsSection({
               </div>
               <button
                 type="button"
+                onClick={() => openEdit(c)}
+                className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-background/60 hover:text-primary"
+                aria-label="Edit tag"
+              >
+                <Pencil className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
                 onClick={() => remove(c)}
                 className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-background/60 hover:text-destructive"
                 aria-label="Delete tag"
@@ -287,6 +341,7 @@ function TagsSection({
         </ul>
       )}
 
+      {/* Add dialog */}
       <Dialog open={open} onOpenChange={(o) => (o ? setOpen(true) : closeAndReset())}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
@@ -324,6 +379,36 @@ function TagsSection({
             <Button onClick={submit} disabled={enrolling}>
               {enrolling ? "Waiting for tap…" : "Start enrollment"}
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit dialog */}
+      <Dialog open={editOpen} onOpenChange={(o) => (o ? setEditOpen(true) : closeEdit())}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Edit NFC tag</DialogTitle>
+            <DialogDescription>Change the tag’s name, level, or scene.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="edit-tag-name">Name</Label>
+              <Input
+                id="edit-tag-name"
+                placeholder="Front-door fob"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                autoFocus
+              />
+            </div>
+            <LevelSelect value={editLevel} onChange={setEditLevel} />
+            <SceneSelect scenes={scenes} value={editSceneId} onChange={setEditSceneId} />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={closeEdit}>
+              Cancel
+            </Button>
+            <Button onClick={saveEdit}>Save changes</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
