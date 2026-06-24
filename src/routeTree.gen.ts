@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as ScenesRouteImport } from './routes/scenes'
 import { Route as RemotesRouteImport } from './routes/remotes'
 import { Route as EventsRouteImport } from './routes/events'
+import { Route as DoorRouteImport } from './routes/door'
 import { Route as DevicesRouteImport } from './routes/devices'
 import { Route as AlarmsRouteImport } from './routes/alarms'
 import { Route as IndexRouteImport } from './routes/index'
@@ -29,6 +30,11 @@ const RemotesRoute = RemotesRouteImport.update({
 const EventsRoute = EventsRouteImport.update({
   id: '/events',
   path: '/events',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DoorRoute = DoorRouteImport.update({
+  id: '/door',
+  path: '/door',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DevicesRoute = DevicesRouteImport.update({
@@ -51,6 +57,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/alarms': typeof AlarmsRoute
   '/devices': typeof DevicesRoute
+  '/door': typeof DoorRoute
   '/events': typeof EventsRoute
   '/remotes': typeof RemotesRoute
   '/scenes': typeof ScenesRoute
@@ -59,6 +66,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/alarms': typeof AlarmsRoute
   '/devices': typeof DevicesRoute
+  '/door': typeof DoorRoute
   '/events': typeof EventsRoute
   '/remotes': typeof RemotesRoute
   '/scenes': typeof ScenesRoute
@@ -68,20 +76,36 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/alarms': typeof AlarmsRoute
   '/devices': typeof DevicesRoute
+  '/door': typeof DoorRoute
   '/events': typeof EventsRoute
   '/remotes': typeof RemotesRoute
   '/scenes': typeof ScenesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/alarms' | '/devices' | '/events' | '/remotes' | '/scenes'
+  fullPaths:
+    | '/'
+    | '/alarms'
+    | '/devices'
+    | '/door'
+    | '/events'
+    | '/remotes'
+    | '/scenes'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/alarms' | '/devices' | '/events' | '/remotes' | '/scenes'
+  to:
+    | '/'
+    | '/alarms'
+    | '/devices'
+    | '/door'
+    | '/events'
+    | '/remotes'
+    | '/scenes'
   id:
     | '__root__'
     | '/'
     | '/alarms'
     | '/devices'
+    | '/door'
     | '/events'
     | '/remotes'
     | '/scenes'
@@ -91,6 +115,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AlarmsRoute: typeof AlarmsRoute
   DevicesRoute: typeof DevicesRoute
+  DoorRoute: typeof DoorRoute
   EventsRoute: typeof EventsRoute
   RemotesRoute: typeof RemotesRoute
   ScenesRoute: typeof ScenesRoute
@@ -117,6 +142,13 @@ declare module '@tanstack/react-router' {
       path: '/events'
       fullPath: '/events'
       preLoaderRoute: typeof EventsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/door': {
+      id: '/door'
+      path: '/door'
+      fullPath: '/door'
+      preLoaderRoute: typeof DoorRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/devices': {
@@ -147,6 +179,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AlarmsRoute: AlarmsRoute,
   DevicesRoute: DevicesRoute,
+  DoorRoute: DoorRoute,
   EventsRoute: EventsRoute,
   RemotesRoute: RemotesRoute,
   ScenesRoute: ScenesRoute,
