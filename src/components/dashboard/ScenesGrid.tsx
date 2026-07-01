@@ -252,6 +252,7 @@ export function ScenesGrid({ forJarvis = false }: { forJarvis?: boolean } = {}) 
         open={builderOpen}
         onOpenChange={setBuilderOpen}
         scene={editScene}
+        forJarvis={forJarvis}
         onSaved={refresh}
       />
     </section>
