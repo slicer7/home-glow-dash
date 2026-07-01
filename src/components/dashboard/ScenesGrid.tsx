@@ -209,6 +209,11 @@ export function ScenesGrid({ forJarvis = false }: { forJarvis?: boolean } = {}) 
                     <p className="mt-0.5 text-[11px] text-muted-foreground">
                       {s.steps.length} {s.steps.length === 1 ? "step" : "steps"}
                     </p>
+                    {forJarvis && s.description ? (
+                      <p className="mt-1.5 line-clamp-3 text-[11px] text-muted-foreground/90">
+                        {s.description}
+                      </p>
+                    ) : null}
                   </div>
                 </button>
 
