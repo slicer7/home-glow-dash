@@ -119,7 +119,13 @@ export function SceneBuilderDialog({ open, onOpenChange, scene, forJarvis = fals
     try {
       // Initial states first, then sequential steps. Runner already executes in order.
       const merged: SceneStep[] = [...initialStates, ...steps];
-      const payload = { name: name.trim(), icon, steps: merged };
+      const payload = {
+        name: name.trim(),
+        icon,
+        steps: merged,
+        for_jarvis: forJarvis,
+        description: forJarvis ? (description.trim() || null) : null,
+      };
       const res = scene
         ? await supabase.from("scenes").update(payload).eq("id", scene.id)
         : await supabase.from("scenes").insert(payload);
