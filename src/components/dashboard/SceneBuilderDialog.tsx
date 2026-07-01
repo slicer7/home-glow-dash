@@ -19,6 +19,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { SCENE_ICONS } from "./sceneIcons";
 import { iconFor as rfIconFor } from "./rfIcons";
