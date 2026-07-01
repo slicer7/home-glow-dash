@@ -161,6 +161,20 @@ export function SceneBuilderDialog({ open, onOpenChange, scene, forJarvis = fals
             />
           </div>
 
+          {forJarvis && (
+            <div className="space-y-2">
+              <label className="text-xs font-medium text-muted-foreground">
+                Description — what it does &amp; when to use it
+              </label>
+              <Textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="e.g. Dims the lights and starts the movie — use when I say 'movie time' or want to watch something."
+                rows={3}
+              />
+            </div>
+          )}
+
           <div className="space-y-2">
             <label className="text-xs font-medium text-muted-foreground">Icon</label>
             <div className="grid grid-cols-6 gap-2">
