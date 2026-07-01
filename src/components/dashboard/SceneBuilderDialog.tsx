@@ -66,6 +66,7 @@ export function SceneBuilderDialog({ open, onOpenChange, scene, forJarvis = fals
     if (!open) return;
     setName(scene?.name ?? "");
     setIcon(scene?.icon ?? "film");
+    setDescription(scene?.description ?? "");
     const all = scene?.steps ?? [];
     setInitialStates(all.filter((s): s is PowerStep => s.kind === "power"));
     setSteps(all.filter((s): s is NonPowerStep => s.kind !== "power"));
