@@ -40,6 +40,7 @@ type Props = {
   open: boolean;
   onOpenChange: (o: boolean) => void;
   scene: Scene | null; // null = create
+  forJarvis?: boolean;
   onSaved: () => void;
 };
 
