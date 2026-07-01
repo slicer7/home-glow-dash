@@ -63,7 +63,7 @@ async function runStep(step: SceneStep): Promise<void> {
 }
 
 
-export function ScenesGrid() {
+export function ScenesGrid({ forJarvis = false }: { forJarvis?: boolean } = {}) {
   const [scenes, setScenes] = useState<Scene[]>([]);
   const [loading, setLoading] = useState(true);
   const [runningId, setRunningId] = useState<string | null>(null);
