@@ -76,10 +76,15 @@ export function ScenesGrid({ forJarvis = false }: { forJarvis?: boolean } = {}) 
       .select("*")
       .order("created_at", { ascending: true });
     if (error) {
-      toast.error("Couldn’t load scenes", { description: error.message });
+      toast.error("Couldn't load scenes", { description: error.message });
       return;
     }
-    setScenes((data ?? []) as Scene[]);
+    const all = (data ?? []) as Scene[];
+    setScenes(
+      forJarvis
+        ? all.filter((s) => s.for_jarvis === true)
+        : all.filter((s) => s.for_jarvis !== true),
+    );
   };
 
   useEffect(() => {
