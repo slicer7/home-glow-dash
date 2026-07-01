@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ScenesRouteImport } from './routes/scenes'
 import { Route as RemotesRouteImport } from './routes/remotes'
+import { Route as JarvisRouteImport } from './routes/jarvis'
 import { Route as EventsRouteImport } from './routes/events'
 import { Route as DoorRouteImport } from './routes/door'
 import { Route as DevicesRouteImport } from './routes/devices'
@@ -25,6 +26,11 @@ const ScenesRoute = ScenesRouteImport.update({
 const RemotesRoute = RemotesRouteImport.update({
   id: '/remotes',
   path: '/remotes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JarvisRoute = JarvisRouteImport.update({
+  id: '/jarvis',
+  path: '/jarvis',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EventsRoute = EventsRouteImport.update({
@@ -59,6 +65,7 @@ export interface FileRoutesByFullPath {
   '/devices': typeof DevicesRoute
   '/door': typeof DoorRoute
   '/events': typeof EventsRoute
+  '/jarvis': typeof JarvisRoute
   '/remotes': typeof RemotesRoute
   '/scenes': typeof ScenesRoute
 }
@@ -68,6 +75,7 @@ export interface FileRoutesByTo {
   '/devices': typeof DevicesRoute
   '/door': typeof DoorRoute
   '/events': typeof EventsRoute
+  '/jarvis': typeof JarvisRoute
   '/remotes': typeof RemotesRoute
   '/scenes': typeof ScenesRoute
 }
@@ -78,6 +86,7 @@ export interface FileRoutesById {
   '/devices': typeof DevicesRoute
   '/door': typeof DoorRoute
   '/events': typeof EventsRoute
+  '/jarvis': typeof JarvisRoute
   '/remotes': typeof RemotesRoute
   '/scenes': typeof ScenesRoute
 }
@@ -89,6 +98,7 @@ export interface FileRouteTypes {
     | '/devices'
     | '/door'
     | '/events'
+    | '/jarvis'
     | '/remotes'
     | '/scenes'
   fileRoutesByTo: FileRoutesByTo
@@ -98,6 +108,7 @@ export interface FileRouteTypes {
     | '/devices'
     | '/door'
     | '/events'
+    | '/jarvis'
     | '/remotes'
     | '/scenes'
   id:
@@ -107,6 +118,7 @@ export interface FileRouteTypes {
     | '/devices'
     | '/door'
     | '/events'
+    | '/jarvis'
     | '/remotes'
     | '/scenes'
   fileRoutesById: FileRoutesById
@@ -117,6 +129,7 @@ export interface RootRouteChildren {
   DevicesRoute: typeof DevicesRoute
   DoorRoute: typeof DoorRoute
   EventsRoute: typeof EventsRoute
+  JarvisRoute: typeof JarvisRoute
   RemotesRoute: typeof RemotesRoute
   ScenesRoute: typeof ScenesRoute
 }
@@ -135,6 +148,13 @@ declare module '@tanstack/react-router' {
       path: '/remotes'
       fullPath: '/remotes'
       preLoaderRoute: typeof RemotesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/jarvis': {
+      id: '/jarvis'
+      path: '/jarvis'
+      fullPath: '/jarvis'
+      preLoaderRoute: typeof JarvisRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/events': {
@@ -181,6 +201,7 @@ const rootRouteChildren: RootRouteChildren = {
   DevicesRoute: DevicesRoute,
   DoorRoute: DoorRoute,
   EventsRoute: EventsRoute,
+  JarvisRoute: JarvisRoute,
   RemotesRoute: RemotesRoute,
   ScenesRoute: ScenesRoute,
 }
