@@ -63,7 +63,7 @@ async function runStep(step: SceneStep): Promise<void> {
 }
 
 
-export function ScenesGrid() {
+export function ScenesGrid({ forJarvis = false }: { forJarvis?: boolean } = {}) {
   const [scenes, setScenes] = useState<Scene[]>([]);
   const [loading, setLoading] = useState(true);
   const [runningId, setRunningId] = useState<string | null>(null);
@@ -76,10 +76,15 @@ export function ScenesGrid() {
       .select("*")
       .order("created_at", { ascending: true });
     if (error) {
-      toast.error("Couldn’t load scenes", { description: error.message });
+      toast.error("Couldn't load scenes", { description: error.message });
       return;
     }
-    setScenes((data ?? []) as Scene[]);
+    const all = (data ?? []) as Scene[];
+    setScenes(
+      forJarvis
+        ? all.filter((s) => s.for_jarvis === true)
+        : all.filter((s) => s.for_jarvis !== true),
+    );
   };
 
   useEffect(() => {
@@ -204,6 +209,11 @@ export function ScenesGrid() {
                     <p className="mt-0.5 text-[11px] text-muted-foreground">
                       {s.steps.length} {s.steps.length === 1 ? "step" : "steps"}
                     </p>
+                    {forJarvis && s.description ? (
+                      <p className="mt-1.5 line-clamp-3 text-[11px] text-muted-foreground/90">
+                        {s.description}
+                      </p>
+                    ) : null}
                   </div>
                 </button>
 
@@ -242,6 +252,7 @@ export function ScenesGrid() {
         open={builderOpen}
         onOpenChange={setBuilderOpen}
         scene={editScene}
+        forJarvis={forJarvis}
         onSaved={refresh}
       />
     </section>

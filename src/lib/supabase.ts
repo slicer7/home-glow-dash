@@ -196,6 +196,8 @@ export type Scene = {
   icon: SceneIcon;
   steps: SceneStep[];
   created_at: string;
+  for_jarvis?: boolean;
+  description?: string | null;
 };
 
 

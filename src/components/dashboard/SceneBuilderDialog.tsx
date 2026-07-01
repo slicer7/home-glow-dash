@@ -19,6 +19,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { SCENE_ICONS } from "./sceneIcons";
 import { iconFor as rfIconFor } from "./rfIcons";
@@ -40,6 +41,7 @@ type Props = {
   open: boolean;
   onOpenChange: (o: boolean) => void;
   scene: Scene | null; // null = create
+  forJarvis?: boolean;
   onSaved: () => void;
 };
 
@@ -48,9 +50,10 @@ const DELAY_PRESETS = [500, 1000, 2000, 3000, 5000];
 type PowerStep = Extract<SceneStep, { kind: "power" }>;
 type NonPowerStep = Exclude<SceneStep, { kind: "power" }>;
 
-export function SceneBuilderDialog({ open, onOpenChange, scene, onSaved }: Props) {
+export function SceneBuilderDialog({ open, onOpenChange, scene, forJarvis = false, onSaved }: Props) {
   const [name, setName] = useState("");
   const [icon, setIcon] = useState<SceneIcon>("film");
+  const [description, setDescription] = useState("");
   // Initial device states (always run first, only sends if device isn't already in desired state)
   const [initialStates, setInitialStates] = useState<PowerStep[]>([]);
   // Sequential steps (RF / IR / delay) run after all initial states
@@ -64,6 +67,7 @@ export function SceneBuilderDialog({ open, onOpenChange, scene, onSaved }: Props
     if (!open) return;
     setName(scene?.name ?? "");
     setIcon(scene?.icon ?? "film");
+    setDescription(scene?.description ?? "");
     const all = scene?.steps ?? [];
     setInitialStates(all.filter((s): s is PowerStep => s.kind === "power"));
     setSteps(all.filter((s): s is NonPowerStep => s.kind !== "power"));
@@ -115,7 +119,13 @@ export function SceneBuilderDialog({ open, onOpenChange, scene, onSaved }: Props
     try {
       // Initial states first, then sequential steps. Runner already executes in order.
       const merged: SceneStep[] = [...initialStates, ...steps];
-      const payload = { name: name.trim(), icon, steps: merged };
+      const payload = {
+        name: name.trim(),
+        icon,
+        steps: merged,
+        for_jarvis: forJarvis,
+        description: forJarvis ? (description.trim() || null) : null,
+      };
       const res = scene
         ? await supabase.from("scenes").update(payload).eq("id", scene.id)
         : await supabase.from("scenes").insert(payload);
@@ -150,6 +160,20 @@ export function SceneBuilderDialog({ open, onOpenChange, scene, onSaved }: Props
               autoFocus
             />
           </div>
+
+          {forJarvis && (
+            <div className="space-y-2">
+              <label className="text-xs font-medium text-muted-foreground">
+                Description — what it does &amp; when to use it
+              </label>
+              <Textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="e.g. Dims the lights and starts the movie — use when I say 'movie time' or want to watch something."
+                rows={3}
+              />
+            </div>
+          )}
 
           <div className="space-y-2">
             <label className="text-xs font-medium text-muted-foreground">Icon</label>
