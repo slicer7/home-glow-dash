@@ -49,9 +49,10 @@ const DELAY_PRESETS = [500, 1000, 2000, 3000, 5000];
 type PowerStep = Extract<SceneStep, { kind: "power" }>;
 type NonPowerStep = Exclude<SceneStep, { kind: "power" }>;
 
-export function SceneBuilderDialog({ open, onOpenChange, scene, onSaved }: Props) {
+export function SceneBuilderDialog({ open, onOpenChange, scene, forJarvis = false, onSaved }: Props) {
   const [name, setName] = useState("");
   const [icon, setIcon] = useState<SceneIcon>("film");
+  const [description, setDescription] = useState("");
   // Initial device states (always run first, only sends if device isn't already in desired state)
   const [initialStates, setInitialStates] = useState<PowerStep[]>([]);
   // Sequential steps (RF / IR / delay) run after all initial states
